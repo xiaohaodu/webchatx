@@ -9,7 +9,7 @@ services:
     volumes:
       - ./web-chat-x-express:/web-chat-x-express
     working_dir: /web-chat-x-express
-    entrypoint: pm2-runtime start ecosystem.config.js
+    entrypoint: pm2-runtime start ecosystem.config.cjs
   web-chat-x-vue:
     image: nginx:stable-perl
     container_name: web-chat-x-vue
