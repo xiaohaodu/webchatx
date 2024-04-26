@@ -1,0 +1,31 @@
+services:
+  web-chat-x-express:
+    image: duxiaohao/pm2:v1
+    networks:
+      - web-chat-x
+      - docker
+    container_name: web-chat-x-express
+    restart: always
+    volumes:
+      - ./web-chat-x-express:/web-chat-x-express
+    working_dir: /web-chat-x-express
+    entrypoint: pm2-runtime start ecosystem.config.js
+  web-chat-x-vue:
+    image: nginx:stable-perl
+    container_name: web-chat-x-vue
+    networks:
+      - web-chat-x
+      - docker
+    restart: always
+    depends_on:
+      - web-chat-x-express
+    volumes:
+      - "./nginx:/etc/nginx/conf.d"
+      - "./web-chat-x-vue:/etc/nginx/html"
+networks:
+  web-chat-x:
+    name: web-chat-x
+    driver: bridge
+  docker:
+    external:
+      name: docker

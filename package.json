@@ -3,10 +3,17 @@
   "version": "1.0.0",
   "author": "duxiaohao",
   "description": "web-chat-x",
-  "main": "index.js",
   "scripts": {
+    "prod-deploy": "pnpm build && pnpm copy:prod",
+    "dev-deploy": "pnpm build && pnpm copy:dev",
     "build:b": "pnpm --filter web-chat-x-express build",
-    "build:f": "pnpm --filter web-chat-x-vue build"
+    "build:f": "pnpm --filter web-chat-x-vue build",
+    "build": "pnpm build:b && pnpm build:f && pnpm copy",
+    "copy": "pnpm copy:f && pnpm copy:b && copyfiles turnserver.conf dist",
+    "copy:f": "copyfiles -u 3 packages/web-chat-x-vue/dist/**/* dist/web-chat-x-vue && copyfiles -u 2 packages/web-chat-x-vue/default.conf dist/nginx",
+    "copy:b": "copyfiles -u 3 packages/web-chat-x-express/build/**/* dist/web-chat-x-express",
+    "copy:prod": "copyfiles -u 2 docker/prod/**/* dist",
+    "copy:dev": "copyfiles -u 2 docker/dev/**/* dist"
   },
   "keywords": [],
   "license": "ISC",
@@ -45,6 +52,7 @@
   },
   "devDependencies": {
     "typescript": "5.4.2",
-    "vitest": "^1.3.1"
+    "vitest": "^1.3.1",
+    "copyfiles": "^2.4.1"
   }
 }

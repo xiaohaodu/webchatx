@@ -22,7 +22,6 @@
     "@types/node": "^20.11.25",
     "@types/sshpk": "^1.17.4",
     "@vercel/ncc": "^0.38.1",
-    "copyfiles": "^2.4.1",
     "nodemon": "^3.1.0",
     "pm2": "^5.3.1",
     "supertest": "^6.3.4",

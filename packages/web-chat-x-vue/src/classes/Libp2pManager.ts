@@ -71,6 +71,7 @@ export class Libp2pManager {
                 urls: [
                   "stun:stun.l.google.com:19302",
                   "stun:global.stun.twilio.com:3478",
+                  "stun:webchatx.stun.mayuan.work:3478",
                 ],
               },
             ],

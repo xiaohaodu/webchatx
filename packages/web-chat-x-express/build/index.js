@@ -95046,7 +95046,7 @@ function gossipsub(init = {}) {
 
 /**
  * 启动 Relay 服务的异步函数。接受可选的 RelayServiceOptions 参数以配置启动和停止回调。
- */
+ * */
 async function startRelayService(options) {
     let libp2p;
     try {
@@ -95097,7 +95097,12 @@ async function createRelayNode() {
             }),
             pubsub: gossipsub(),
         },
-        peerDiscovery: [mdns()],
+        peerDiscovery: [
+            mdns(),
+            // bootstrap({
+            //   list: [],
+            // }),
+        ],
         peerId: peerId,
     });
 }
