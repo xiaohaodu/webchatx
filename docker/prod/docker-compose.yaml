@@ -22,6 +22,22 @@ services:
     volumes:
       - "./nginx:/etc/nginx/conf.d"
       - "./web-chat-x-vue:/etc/nginx/html"
+  coturn:
+    image: coturn/coturn:4.6.2
+    container_name: coturn-server
+    command: ["--min-port=49160", "--max-port=49200"]
+    ports:
+      - "3478:3478"
+      - "3478:3478/udp"
+      - "5349:5349"
+      - "5349:5349/udp"
+      - "49160-49200:49160-49200/udp"
+    volumes:
+      - ./turnserver.conf:/etc/turnserver.conf
+    restart: always
+    networks:
+      - docker
+      - web-chat-x
 networks:
   web-chat-x:
     name: web-chat-x
