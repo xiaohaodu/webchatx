@@ -25,7 +25,6 @@ services:
   coturn:
     image: coturn/coturn:4.6.2
     container_name: coturn-server
-    command: ["--min-port=49160", "--max-port=49200"]
     ports:
       - "3478:3478"
       - "3479:3479"
@@ -38,6 +37,7 @@ services:
       - "49160-49200:49160-49200/udp"
     volumes:
       - ./turnserver.conf:/etc/turnserver.conf
+      - ./certs:/etc/certs
     restart: always
     networks:
       - docker

@@ -9,7 +9,7 @@
     "build:b": "pnpm --filter web-chat-x-express build",
     "build:f": "pnpm --filter web-chat-x-vue build",
     "build": "pnpm build:b && pnpm build:f && pnpm copy",
-    "copy": "pnpm copy:f && pnpm copy:b && copyfiles turnserver.conf dist",
+    "copy": "pnpm copy:f && pnpm copy:b && copyfiles turnserver.conf dist && copyfiles certs/**/* dist",
     "copy:f": "copyfiles -u 3 packages/web-chat-x-vue/dist/**/* dist/web-chat-x-vue && copyfiles -u 2 packages/web-chat-x-vue/default.conf dist/nginx",
     "copy:b": "copyfiles -u 3 packages/web-chat-x-express/build/**/* dist/web-chat-x-express",
     "copy:prod": "copyfiles -u 2 docker/prod/**/* dist",
