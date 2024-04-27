@@ -28,9 +28,13 @@ services:
     command: ["--min-port=49160", "--max-port=49200"]
     ports:
       - "3478:3478"
+      - "3479:3479"
       - "3478:3478/udp"
+      - "3479:3479/udp"
       - "5349:5349"
+      - "5350:5350"
       - "5349:5349/udp"
+      - "5350:5350/udp"
       - "49160-49200:49160-49200/udp"
     volumes:
       - ./turnserver.conf:/etc/turnserver.conf
