@@ -1,13 +1,5 @@
 <template>
-  <div
-    style="
-      height: 58px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    "
-    @click="toggleDarkMode()"
-  >
+  <div class="flex justify-center items-center" @click="toggleDark()">
     <div :class="isDark ? 'switch_open switch' : 'switch_close switch'">
       <img class="switch__icon" src="@/assets/moon.svg" v-show="isDark" />
       <img class="switch__icon" src="@/assets/sun.svg" v-show="!isDark" />
@@ -17,8 +9,7 @@
 
 <script lang="ts" setup>
 import { useDarkMode } from "@/hooks/useDark";
-
-const { isDark, toggleDarkMode } = useDarkMode();
+const { isDark, toggleDark } = useDarkMode();
 </script>
 
 <style lang="scss" scoped>

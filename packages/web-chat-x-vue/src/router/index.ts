@@ -6,7 +6,6 @@ import {
   RouteLocationNormalized,
 } from "vue-router";
 import useDb from "@/hooks/useDexie";
-
 const routes: RouteRecordRaw[] = [
   {
     path: "/login",
@@ -96,6 +95,7 @@ router.beforeEach(
   ) => {
     const { publicDb, createActivateUserDb, activatedUserDb } = useDb();
     const currentUser = await publicDb.currentUser.limit(1).first();
+
     // 刷新后为全局的dbService重新注入
     if (to.meta?.requiresAuth) {
       // 检查目标路由是否要求认证

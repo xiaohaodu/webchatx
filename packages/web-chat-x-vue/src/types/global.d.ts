@@ -14,6 +14,7 @@ declare global {
     friends: ChatUserInfo[]; // 好友/订阅者
     channels: ChatChannelInfo[]; //订阅
     relayMultiaddrs: string[]; // multiaddr
+    stunTurn: string[];
     avatar: string; // 群聊/用户 头像
     name: string; // 名字
     email: string; // 联系邮件

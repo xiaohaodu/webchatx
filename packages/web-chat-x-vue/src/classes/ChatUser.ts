@@ -16,6 +16,7 @@ export default class ChatUser implements ChatUserInfo {
   password: string;
   hashedPassword: string;
   relayMultiaddrs: string[];
+  stunTurn: string[];
   constructor(
     id: string,
     peerId: PeerId,
@@ -33,6 +34,7 @@ export default class ChatUser implements ChatUserInfo {
     this.friends = [];
     this.channels = [];
     this.relayMultiaddrs = [];
+    this.stunTurn = [];
     this.avatar = "";
     this.email = "";
     this.phone = "";

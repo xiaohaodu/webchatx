@@ -17,14 +17,15 @@ export default defineConfig({
       manifest: {
         name: "WebChatX",
         description: "WebChatX",
+        theme_color: "#ffffff",
         icons: [
           {
-            src: "/WebChatX.svg",
+            src: "/WebChatX_192.svg",
             sizes: "192x192",
             type: "image/svg+xml",
           },
           {
-            src: "/WebChatX.svg",
+            src: "/WebChatX_512.svg",
             sizes: "512x512",
             type: "image/svg+xml",
           },

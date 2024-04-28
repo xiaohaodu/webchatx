@@ -7,6 +7,7 @@ export default class ChatChannel implements ChatChannelInfo {
   friends: ChatUserInfo[];
   channels: ChatChannelInfo[];
   relayMultiaddrs: string[];
+  stunTurn: string[];
   unique: string = "currentUser";
   avatar: string;
   name: string;
@@ -32,6 +33,7 @@ export default class ChatChannel implements ChatChannelInfo {
     this.description = description;
     this.friends = [];
     this.relayMultiaddrs = [];
+    this.stunTurn = [];
     this.channels = [];
     this.avatar = "";
     this.email = "";

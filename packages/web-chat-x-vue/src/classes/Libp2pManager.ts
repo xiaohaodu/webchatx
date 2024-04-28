@@ -9,7 +9,7 @@ import { echo } from "@libp2p/echo";
 import * as filters from "@libp2p/websockets/filters";
 import { KadDHT, kadDHT } from "@libp2p/kad-dht";
 import { PeerId, PeerStore, Stream } from "@libp2p/interface";
-import { Multiaddr } from "@multiformats/multiaddr";
+import { Multiaddr, multiaddr } from "@multiformats/multiaddr";
 import { GossipSub, gossipsub } from "@chainsafe/libp2p-gossipsub";
 import ChatUser from "./ChatUser";
 import ChatChannel from "./ChatChannel";
@@ -21,7 +21,17 @@ export class Libp2pManager {
   private peerStore: PeerStore | undefined;
   private friends: ChatUser[] | undefined;
   private channels: ChatChannel[] | undefined;
+  private relayMultiaddr: Multiaddr = multiaddr(
+    "/dns/webchatx.mayuan.work/tcp/9000/ws/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg"
+  );
 
+  getRelayMultiaddr(): Multiaddr {
+    return this.relayMultiaddr;
+  }
+  setRelayMultiaddr(relayMultiaddr: Multiaddr): Multiaddr {
+    this.relayMultiaddr = relayMultiaddr;
+    return this.relayMultiaddr;
+  }
   // Getter for libp2p
   getLibp2p(): Libp2p | undefined {
     return this.libp2p;
@@ -103,9 +113,8 @@ export class Libp2pManager {
     this.peerStore = this.libp2p.peerStore;
   }
 
-  async startLibp2pNode(
-    relayMultiaddrs: Multiaddr[] | Multiaddr
-  ): Promise<void> {
+  async startLibp2pNode(relayMultiaddr: Multiaddr): Promise<void> {
+    relayMultiaddr && this.setRelayMultiaddr(relayMultiaddr);
     return new Promise(async (resolve, reject) => {
       const timeIntervalStart = () => {
         const timeInterval = setInterval(() => {
@@ -146,7 +155,7 @@ export class Libp2pManager {
       await this.libp2p!.start();
       try {
         await this.libp2p!.dialProtocol(
-          relayMultiaddrs,
+          this.relayMultiaddr,
           this.libp2p!.getProtocols(),
           {
             signal: AbortSignal.timeout(5000),
@@ -154,7 +163,7 @@ export class Libp2pManager {
         );
         timeIntervalStart();
       } catch (error) {
-        reject(new Error("FindPeer Failed"));
+        reject(error);
       }
     });
   }
@@ -176,11 +185,9 @@ export class Libp2pManager {
     }
   }
 
-  async connectFriendLibp2p(
-    multiaddr: Multiaddr[] | Multiaddr
-  ): Promise<Stream> {
+  async connectFriendLibp2p(multiaddr: Multiaddr): Promise<Stream> {
     return new Promise(async (resolve) => {
-      const timeIntervalStart = (multiaddr: Multiaddr[] | Multiaddr) => {
+      const timeIntervalStart = (multiaddr: Multiaddr) => {
         const timeInterval = setInterval(async () => {
           try {
             const stream = await this.libp2p?.dialProtocol(
@@ -198,10 +205,7 @@ export class Libp2pManager {
     });
   }
 
-  async sendMessage(
-    multiaddr: Multiaddr[] | Multiaddr,
-    message: string
-  ): Promise<void> {
+  async sendMessage(multiaddr: Multiaddr, message: string): Promise<void> {
     return new Promise(async (_, reject) => {
       try {
         const stream = await this.connectFriendLibp2p(multiaddr);
@@ -223,7 +227,7 @@ export class Libp2pManager {
     });
   }
 
-  async connectVideo(multiaddr: Multiaddr[] | Multiaddr) {
+  async connectVideo(multiaddr: Multiaddr) {
     return new Promise(async (_, reject) => {
       try {
         await this.connectFriendLibp2p(multiaddr);
