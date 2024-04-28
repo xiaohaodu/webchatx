@@ -1,6 +1,8 @@
 services:
   web-chat-x-express:
     image: duxiaohao/pm2:v1
+    ports:
+      - 9000:9000
     networks:
       - web-chat-x
       - docker

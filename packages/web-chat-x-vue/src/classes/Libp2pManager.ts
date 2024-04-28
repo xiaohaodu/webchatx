@@ -15,8 +15,6 @@ import ChatUser from "./ChatUser";
 import ChatChannel from "./ChatChannel";
 import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
 import { pipe } from "it-pipe";
-import { gossiplog } from "@canvas-js/gossiplog/service";
-// import { GossipLog } from "@canvas-js/gossiplog/browser";
 export class Libp2pManager {
   private libp2p: Libp2p | undefined;
   private peerId: PeerId | undefined;
@@ -71,7 +69,7 @@ export class Libp2pManager {
                 urls: [
                   "stun:stun.l.google.com:19302",
                   "stun:global.stun.twilio.com:3478",
-                  "stun:webchatx.stun.mayuan.work:3478",
+                  "turn:webchatx.stun.mayuan.work:3478",
                 ],
               },
             ],
@@ -97,7 +95,6 @@ export class Libp2pManager {
           floodPublish: true,
           doPX: true,
         }),
-        gossiplog: gossiplog({}),
       },
       peerId,
     });

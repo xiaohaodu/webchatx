@@ -61,7 +61,7 @@ async function createRelayNode(): Promise<Libp2p> {
   const peerId = await peerIdFromKeys(keyPair.public.bytes, keyPair.bytes);
   return await createLibp2p({
     addresses: {
-      listen: ["/ip4/127.0.0.1/tcp/8098/ws"], // 替换为实际希望监听的 IP 和端口
+      listen: ["/ip4/127.0.0.1/tcp/9000/ws"], // 替换为实际希望监听的 IP 和端口
     },
     transports: [webSockets({ filter: filters.all })],
     connectionEncryption: [noise()],
