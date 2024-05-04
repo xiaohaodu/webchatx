@@ -13,7 +13,7 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
     "@vueuse/core": "^10.9.0",
-    "crc-32": "^1.2.2",
+    "crc": "^4.3.2",
     "dexie": "^3.2.6",
     "element-plus": "^2.6.1",
     "emoji-regex": "^10.3.0",
@@ -43,6 +43,7 @@
     "postcss": "^8.4.35",
     "sass": "^1.72.0",
     "tailwindcss": "^3.4.1",
+    "tsconfig-paths": "^4.2.0",
     "unplugin-auto-import": "^0.17.5",
     "unplugin-icons": "^0.18.5",
     "unplugin-vue-components": "^0.26.0",
