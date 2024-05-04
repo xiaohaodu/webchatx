@@ -1,13 +1,15 @@
 import express from "express";
 import { generatePeerServer } from "./controllers/peer.js";
 import { startRelayService } from "./controllers/libp2p.js";
-
+import cors from "cors";
 const app = express();
 const port = 8099;
 
 const server = app.listen(port, () => {
   console.log(`webrtc-peer-express app listen on http://localhost:${port}`);
 });
+
+app.use(cors());
 
 const peerServer = generatePeerServer(server);
 
