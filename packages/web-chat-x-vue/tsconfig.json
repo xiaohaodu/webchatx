@@ -24,8 +24,14 @@
     "paths": {
       "@/*": ["src/*"]
     },
-
-    "types": ["element-plus/global", "@types/node", "@types/web"]
+    "types": [
+      "element-plus/global",
+      "@types/node",
+      "@types/web",
+      "cypress",
+      "@testing-library/cypress",
+      "@types/lodash-es"
+    ]
   },
 
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "src/**/*.d.ts"],

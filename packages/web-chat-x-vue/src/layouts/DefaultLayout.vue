@@ -13,12 +13,46 @@
         <el-menu-item index="/start_chatting">开启聊天</el-menu-item>
         <el-sub-menu index="/channel">
           <template #title>频道</template>
-          <el-menu-item index="/channel?id=1">channel-1</el-menu-item>
-          <el-menu-item index="/channel?id=2">channel-2</el-menu-item>
+          <el-menu-item
+            v-for="channel in channels"
+            :index="`/channel/${channel.id}`"
+          >
+            <template #title>
+              <div class="w-full text-ellipsis overflow-hidden">
+                {{ channel.name + "@" + channel.id }}
+              </div>
+              <span
+                :class="{
+                  'online-dot': channel.friendIds.length,
+                  'offline-dot': !channel.friendIds.length,
+                }"
+                class="dot ml-2"
+              ></span>
+              <span class="online-count ml-2">{{
+                channel.friendIds.length
+              }}</span>
+            </template>
+          </el-menu-item>
         </el-sub-menu>
         <el-sub-menu index="/private_chat">
           <template #title>私聊</template>
-          <el-menu-item index="/private_chat?id=1">private-chat-1</el-menu-item>
+          <el-menu-item
+            v-for="friend in friends"
+            :index="`/private_chat/${friend.id}`"
+          >
+            <template #title>
+              <div class="w-full text-ellipsis overflow-hidden">
+                {{ friend.name + "@" + friend.id }}
+              </div>
+              <span
+                :class="{
+                  'online-dot': friend.isOnline,
+                  'offline-dot': !friend.isOnline,
+                }"
+                class="dot ml-2"
+              ></span>
+            </template>
+          </el-menu-item>
         </el-sub-menu>
         <el-menu-item index="/set">设置</el-menu-item>
       </el-menu>
@@ -32,26 +66,52 @@
       <el-main>
         <router-view></router-view>
       </el-main>
+      <peer-video-component></peer-video-component>
     </el-container>
   </el-container>
 </template>
 
 <script setup lang="ts">
+import useLibp2p from "@/hooks/useLibp2p";
 import { useRoute } from "vue-router";
 
+const { libp2pManager } = useLibp2p();
+// const chatUser = libp2pManager.getChatUser();
+const friends = libp2pManager.getFriends();
+const channels = libp2pManager.getChannels();
 // 添加处理菜单选中的方法
 const handleMenuSelect = (index: string) => {
   console.log(`selected menu item: ${index}`);
 };
-
 const activeMenu = ref<string>();
 const route = useRoute();
 onMounted(() => {
-  activeMenu.value = route.fullPath;
+  activeMenu.value =
+    (route.meta.activeMenu as string | undefined) || route.fullPath;
 });
 </script>
 <style lang="scss" scoped>
 .el-divider--horizontal {
   margin: 0;
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.online-dot {
+  background-color: green; /* 在线时为绿色 */
+}
+
+.offline-dot {
+  background-color: gray; /* 不在线时为灰色 */
+}
+
+.online-count {
+  margin-right: 4px; /* 根据需要调整与在线点的距离 */
+  color: #4a4a4a; /* 文字颜色，根据你的设计调整 */
+  font-size: 12px; /* 文字大小，根据需要调整 */
 }
 </style>

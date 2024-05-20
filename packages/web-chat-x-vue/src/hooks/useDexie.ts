@@ -1,16 +1,16 @@
 // useDb.ts
-import { inject } from "vue";
-import { DbService } from "@/database/dbService";
+import { DatabaseManager } from "@/classes/DatabaseManager";
 
 export default function useDb() {
-  const dbService = inject<DbService | undefined>("dbService"); // 直接注入数据库实例
-  if (!dbService) {
-    console.log("The database instance has not been initialized.");
+  const databaseManager = inject<DatabaseManager | undefined>(
+    "databaseManager"
+  ); // 直接注入数据库实例
+  if (!databaseManager) {
+    throw new Error("The database instance has not been initialized.");
   }
   return {
-    dbService: dbService!,
-    publicDb: dbService!.publicDb,
-    activatedUserDb: dbService!.activatedUserDb,
-    createActivateUserDb: dbService!.createActivateUserDb.bind(dbService),
+    databaseManager: databaseManager!,
+    createActivateUserDb:
+      databaseManager!.createActivateUserDb.bind(databaseManager),
   };
 }

@@ -64,6 +64,7 @@
                   autocomplete="new-password"
                   v-model="form.password"
                   placeholder="密码"
+                  show-password
                 >
                   <template #prefix>
                     <el-icon>
@@ -119,16 +120,20 @@ import {
   UploadFile,
   UploadFiles,
 } from "element-plus";
-import useDb from "@/hooks/useDexie";
 import ChatUser from "@/classes/ChatUser";
-const { publicDb, createActivateUserDb } = useDb();
+import useLibp2p from "@/hooks/useLibp2p";
+import { peerIdFromPeerId } from "@libp2p/peer-id";
+import { cloneDeep } from "lodash-es";
+import useDb from "@/hooks/useDexie";
 const refForm = ref<FormInstance>();
+const { libp2pManager } = useLibp2p();
+const { databaseManager } = useDb();
 const loginOptions = [
   { label: "--- Local User ---", value: "local" },
   { label: "--- New User ---", value: "new" },
   { label: "--- Import User ---", value: "import" },
 ];
-const localUser = ref(await publicDb.users.toArray());
+const localUser = ref(await libp2pManager.getPublicDbUsers());
 
 const currentUser =
   localUser.value.length > 0
@@ -152,105 +157,107 @@ const rules = computed(() => {
     });
   }
 });
-
 const fileList = ref<UploadUserFile[]>([]);
 async function submitForm() {
   if (!refForm.value) return;
-
   try {
     const valid = await refForm.value.validate();
     if (valid) {
+      const AlertMessage = ref("初始化/加载本地数据中...");
+      const AlertLoading = ref(true);
+      ElMessageBox({
+        title: "登录",
+        message: () =>
+          h(
+            ElButton,
+            {
+              id: "message",
+              loading: AlertLoading.value,
+              type: "primary",
+            },
+            () => AlertMessage.value
+          ),
+        center: true,
+        showConfirmButton: false,
+        distinguishCancelAndClose: true,
+        closeOnClickModal: false,
+        closeOnPressEscape: false,
+      });
       if (form.loginType === "new") {
         // 存储新用户的哈希密码
-        const chatUser = await ChatUser.create(form.name, form.password, "");
-        await publicDb.currentUser.put(chatUser);
-        await publicDb.users.put(chatUser);
-        await createActivateUserDb(chatUser, chatUser.id);
-        router.push({ name: "Homepage" });
+        const chatUser = await ChatUser.create(
+          form.name,
+          form.password,
+          "",
+          [],
+          [],
+          [],
+          ""
+        );
+        await libp2pManager.createNewUser(chatUser);
+        await libp2pManager.createActivateUserDb(chatUser, chatUser.id);
+        await libp2pManager.createLibp2pNode(chatUser.peerId);
+        await libp2pManager.startLibp2pNode();
+        libp2pManager.setChatUser(chatUser);
       } else if (form.loginType === "import") {
+        await databaseManager.importDB(dbUploadFile.value!.raw!);
+        const interval = async () => {
+          localUser.value = await libp2pManager.getPublicDbUsers();
+          clearTimeout(timer);
+          if (localUser.value.length) {
+            currentUser.value = localUser.value[0];
+            form.loginType = "local";
+          } else {
+            timer = setTimeout(interval, 500);
+          }
+        };
+        let timer = setTimeout(interval, 500);
         // 假设parsedJsonData.value已经包含了用户信息
-        if (
-          parsedJsonData.value &&
-          parsedJsonData.value.name &&
-          parsedJsonData.value.hashedPassword
-        ) {
-          await publicDb.currentUser.put(parsedJsonData.value);
-          await publicDb.users.put(parsedJsonData.value);
-          router.push({
-            name: "Homepage",
-          });
-        } else {
-          ElMessageBox.alert("导入的JSON文件缺少必要的用户信息", "错误");
-        }
+        //   ElMessageBox.alert("导入的JSON文件缺少必要的用户信息", "错误");
       } else if (form.loginType === "local") {
         if (currentUser.value) {
-          const currentUser_ = JSON.parse(JSON.stringify(currentUser.value));
-          await publicDb.currentUser.put(currentUser_);
-          await publicDb.users.put(currentUser_);
-          router.push({ name: "Homepage" });
+          const currentUser_ = cloneDeep(currentUser.value);
+          await databaseManager.setCurrentUser(currentUser_);
+          await libp2pManager.createActivateUserDb(
+            currentUser_,
+            currentUser_.id
+          );
+          const peerId = peerIdFromPeerId(currentUser_.peerId);
+          await libp2pManager.createLibp2pNode(peerId);
+          await libp2pManager.startLibp2pNode();
+          libp2pManager.setChatUser(currentUser_);
         } else {
           console.log("请选择本地用户");
         }
       }
-
+      ElMessageBox.close();
+      router.push({ name: "Homepage" });
       // 清空表单及临时变量
       form.name = "";
       form.password = "";
-      parsedJsonData.value = null;
     } else {
       console.log("valid ", valid, "error submit!");
-      return false;
     }
   } catch (error) {
     console.error("验证表单时发生错误:", error);
   }
 }
 
-const parsedJsonData = ref<any | null>(null);
+const dbUploadFile = ref<UploadFile>();
 
 // 处理文件变化事件，用于读取、解析JSON文件内容
 const handleJsonFileChange: UploadProps["onChange"] = async (
   uploadFile: UploadFile,
   uploadFiles: UploadFiles
 ) => {
+  dbUploadFile.value = uploadFile;
   // 检查文件是否存在且已上传完成
-  if (uploadFile && uploadFile.raw?.type === "application/json") {
-    try {
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        if (e.target?.result) {
-          try {
-            parsedJsonData.value = JSON.parse(e.target.result as string);
-            // 可在此处添加额外的JSON结构或内容校验
-          } catch (error) {
-            console.error("解析JSON文件失败:", error);
-            ElMessageBox({
-              title: "错误",
-              message: "所选文件内容不是有效的JSON格式",
-              type: "error",
-            });
-            parsedJsonData.value = null;
-          }
-        }
-      };
-      reader.readAsText(uploadFile.raw);
-    } catch (error) {
-      console.error("读取JSON文件过程中发生错误:", error);
-      ElMessageBox({
-        title: "错误",
-        message: "所选文件内容不是有效的JSON格式",
-        type: "error",
-      });
-      parsedJsonData.value = null;
-    }
-  } else if (uploadFile) {
+  if (!(uploadFile && uploadFile.raw?.type === "application/json")) {
     // 清除已选择文件的状态
-    parsedJsonData.value = null;
     uploadFiles.pop();
-    ElMessageBox({
-      title: "错误",
-      message: "所选文件内容不是有效的JSON格式",
+    ElMessage({
       type: "error",
+      message: "所选文件内容不是有效的JSON格式",
     });
   }
 };

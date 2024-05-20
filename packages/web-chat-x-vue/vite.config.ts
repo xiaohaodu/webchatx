@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import { resolve } from "path";
@@ -11,8 +12,15 @@ import { VitePWA } from "vite-plugin-pwa";
 
 const pathSrc = resolve(__dirname, "src");
 export default defineConfig({
+  test: {},
   plugins: [
-    vue(),
+    vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: (tag) => /^emoji-picker$/i.test(tag),
+        },
+      },
+    }),
     VitePWA({
       manifest: {
         name: "WebChatX",

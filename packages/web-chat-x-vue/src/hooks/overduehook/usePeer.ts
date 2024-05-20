@@ -18,9 +18,10 @@ export default function usePeer(options: UsePeerOptions) {
   const remoteVideoElement = options.remoteVideoElement;
   // 初始化PeerJS实例
   nearPeer.value = new Peer({
-    host: options.host || "localhost",
-    port: options.port || 3000,
-    path: options.path || "/peer",
+    host: options.host || "webchatx.mayuan.work",
+    port: options.port || 443,
+    secure: true,
+    path: options.path || "/api/peer",
   });
   // 监听本地peer ID生成事件
   nearPeer.value?.on("open", async (id) => {

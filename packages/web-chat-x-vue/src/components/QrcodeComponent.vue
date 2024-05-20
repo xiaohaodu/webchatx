@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-row select-none cursor-pointer">
     <canvas ref="canvas"></canvas>
-    <div class="flex flex-col justify-around">
+    <div class="flex flex-col justify-around ml-2">
       <div class="text-sm">此二维码包含您的ID。您可以将它分享给朋友们</div>
       <el-button @click="saveImage">保存图像</el-button>
       <el-button @click="copyImage">复制图像</el-button>

@@ -1,28 +1,37 @@
-import useEncryption from "@/hooks/useEncryption";
+import { generateAndSetIdentifier } from "@/utils";
+
 export default class ChatMessage implements ChatMessageInfo {
-  id: string;
-  user: ChatUserInfo;
-  channel: ChatChannelInfo;
-  text: string;
-  time: Date;
   constructor(
     id: string,
-    user: ChatUserInfo,
-    channel: ChatChannelInfo,
-    text: string
+    text: string,
+    postUserId: string,
+    answerUserId?: string,
+    file?: File,
+    channelId: string = ""
   ) {
     this.id = id;
     this.time = new Date();
     this.text = text;
-    this.user = user;
-    this.channel = channel;
+    this.file = file;
+    this.postUserId = postUserId;
+    this.answerUserId = answerUserId;
+    this.channelId = channelId;
   }
+  id: string;
+  text: string;
+  time: Date;
+  postUserId: string;
+  file: File | undefined;
+  answerUserId: string | undefined;
+  channelId: string | undefined;
   static async create(
-    user: ChatUserInfo,
-    channel: ChatChannelInfo,
-    text: string
+    text: string,
+    postUserId: string,
+    answerUserId?: string,
+    file?: File,
+    channelId: string = ""
   ) {
-    const { id } = await useEncryption();
-    return new ChatMessage(id.value, user, channel, text);
+    const { id } = await generateAndSetIdentifier();
+    return new ChatMessage(id, text, postUserId, answerUserId, file, channelId);
   }
 }

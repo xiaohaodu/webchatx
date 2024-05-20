@@ -52,7 +52,17 @@
             <div class="flex flex-col justify-center items-center">
               <el-form class="w-full">
                 <el-form-item label="ID">
-                  <el-input disabled v-model="user.id"></el-input>
+                  <el-input disabled v-model="user.userId">
+                    <template #suffix>
+                      <el-icon
+                        class="cursor-pointer"
+                        title="复制"
+                        @click="copyID"
+                      >
+                        <el-icon-copy-document></el-icon-copy-document>
+                      </el-icon>
+                    </template>
+                  </el-input>
                 </el-form-item>
               </el-form>
               <div>
@@ -67,7 +77,11 @@
 </template>
 
 <script setup lang="ts">
-import useDexie from "@/hooks/useDexie";
-const { activatedUserDb } = useDexie();
-const user = ref((await activatedUserDb.info.limit(1).first())!);
+import useLibp2p from "@/hooks/useLibp2p";
+const { libp2pManager } = useLibp2p();
+const user = libp2pManager.getChatUser();
+async function copyID() {
+  await navigator.clipboard.writeText(user.value.userId);
+  ElMessage.success("复制成功");
+}
 </script>

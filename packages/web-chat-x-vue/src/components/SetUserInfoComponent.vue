@@ -70,8 +70,10 @@
 <script setup lang="ts">
 import { UploadUserFile } from "element-plus";
 import useDexie from "@/hooks/useDexie";
-const { activatedUserDb, publicDb } = useDexie();
-const user = ref((await activatedUserDb.info.limit(1).first())!);
+const { databaseManager } = useDexie();
+const user = ref(
+  (await databaseManager.activatedUserDb.info.limit(1).first())!
+);
 const isEditingAvatar = ref(false);
 const avatarFileList = ref<UploadUserFile[]>([]);
 
@@ -104,10 +106,9 @@ const save = () => {
   timer.value && clearTimeout(timer.value);
   timer.value = setTimeout(async () => {
     // 当前用户信息更新时user表中信息也要同步更新
-    const user_ = JSON.parse(JSON.stringify(user.value));
-    await activatedUserDb.info.put(user_);
-    await publicDb.currentUser.put(user_);
-    await publicDb.users.put(user_);
+    await databaseManager.activatedUserDb.info.put(user.value);
+    await databaseManager.publicDb.currentUser.put(user.value);
+    await databaseManager.publicDb.users.put(user.value);
     clearTimeout(timer.value);
     timer.value = undefined;
   }, 100);
