@@ -236,11 +236,11 @@ export class Libp2pManager {
       connectionEncryption: [noise()],
       streamMuxers: [yamux()],
       peerDiscovery: [
-        // pubsubPeerDiscovery({
-        //   interval: 10000,
-        //   topics: topics, // defaults to ['_peer-discovery._p2p._pubsub']
-        //   listenOnly: false,
-        // }),
+        pubsubPeerDiscovery({
+          interval: 10000,
+          topics: topics, // defaults to ['_peer-discovery._p2p._pubsub']
+          listenOnly: false,
+        }),
       ],
       services: {
         identify: identify(),
