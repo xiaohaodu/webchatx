@@ -17,7 +17,7 @@ import {
 import { Multiaddr, multiaddr } from "@multiformats/multiaddr";
 import { GossipsubEvents, gossipsub } from "@chainsafe/libp2p-gossipsub";
 import ChatUser from "./ChatUser";
-// import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
+import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
 import { pipe } from "it-pipe";
 import { DatabaseManager } from "./DatabaseManager";
 import ChatMessageAggregation from "./ChatMessageAggregation";
@@ -211,7 +211,7 @@ export class Libp2pManager {
         listen: ["/webrtc"],
       },
       transports: [
-        webSockets({ filter: filters.all }),
+        webSockets({ filter: filters.dnsWsOrWss }),
         webRTC({
           rtcConfiguration: {
             iceServers: [
@@ -230,7 +230,7 @@ export class Libp2pManager {
           },
         }),
         circuitRelayTransport({
-          discoverRelays: 100,
+          discoverRelays: 1,
         }),
       ],
       connectionEncryption: [noise()],

@@ -13,7 +13,12 @@ import { parsePrivateKeySecret } from "../utils/parseSecret.js";
 import { mdns } from "@libp2p/mdns";
 import { gossipsub } from "@chainsafe/libp2p-gossipsub";
 import { Server } from "https";
+import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
 // import { bootstrap } from "@libp2p/bootstrap";
+const topics = [
+  `webChatX._peer-discovery._p2p._pubsub`, // It's recommended but not required to extend the global space
+  // "_peer-discovery._p2p._pubsub", // Include if you want to participate in the global space
+];
 /**
  * 定义 RelayServiceOptions 类型，用于配置启动和停止回调函数
  * */
@@ -90,6 +95,11 @@ async function createRelayNode(_server?: Server): Promise<Libp2p> {
       // bootstrap({
       //   list: [],
       // }),
+      pubsubPeerDiscovery({
+        interval: 10000,
+        topics: topics, // defaults to ['_peer-discovery._p2p._pubsub']
+        listenOnly: false,
+      }),
     ],
     peerId: peerId,
   });

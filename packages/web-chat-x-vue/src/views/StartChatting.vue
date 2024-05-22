@@ -130,6 +130,7 @@ async function friendRequest() {
         privateChatFormData.userId
       );
       const remotePeerId = peerIdFromString(remotePeerIdString);
+      // "/dns/webchatx.mayuan.work/tcp/10000/ws/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg/p2p-circuit/p2p/"
       await libp2pManager.requestFriend(
         remotePeerId,
         privateChatFormData.validationMessage ||
