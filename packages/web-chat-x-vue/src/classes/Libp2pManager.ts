@@ -39,9 +39,14 @@ export class Libp2pManager {
   private friends: Ref<ChatUser[]> | undefined;
   private channels: Ref<ChatChannel[]> | undefined;
   private subscribers: Ref<ChatUser[]> | undefined;
-  private relayMultiaddr: Multiaddr = multiaddr(
-    "/dns/webchatx.mayuan.work/tcp/9000/wss/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg"
-  );
+  private relayMultiaddrs: Multiaddr[] = [
+    multiaddr(
+      "/dns/webchatx.mayuan.work/tcp/9000/wss/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg"
+    ),
+    multiaddr(
+      "/dns/webchatx.mayuan.work/tcp/10000/ws/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg"
+    ),
+  ];
   public databaseManager: DatabaseManager | undefined;
   public peerManager: PeerManager | undefined;
   private running: boolean = false;
@@ -54,12 +59,12 @@ export class Libp2pManager {
   getStatus(): boolean {
     return this.running;
   }
-  getRelayMultiaddr(): Multiaddr {
-    return this.relayMultiaddr;
+  getRelayMultiaddr(): Multiaddr[] {
+    return this.relayMultiaddrs;
   }
-  setRelayMultiaddr(relayMultiaddr: Multiaddr): Multiaddr {
-    this.relayMultiaddr = relayMultiaddr;
-    return this.relayMultiaddr;
+  setRelayMultiaddr(relayMultiaddrs: Multiaddr[]): Multiaddr[] {
+    this.relayMultiaddrs = relayMultiaddrs;
+    return this.relayMultiaddrs;
   }
   // Getter for libp2p
   getLibp2p(): Libp2p | undefined {
@@ -225,7 +230,7 @@ export class Libp2pManager {
           },
         }),
         circuitRelayTransport({
-          discoverRelays: 1,
+          discoverRelays: 100,
         }),
       ],
       connectionEncryption: [noise()],
@@ -255,8 +260,8 @@ export class Libp2pManager {
     this.running = true;
   }
 
-  async startLibp2pNode(relayMultiaddr?: Multiaddr): Promise<void> {
-    relayMultiaddr && this.setRelayMultiaddr(relayMultiaddr);
+  async startLibp2pNode(relayMultiaddrs?: Multiaddr[]): Promise<void> {
+    relayMultiaddrs?.length && this.setRelayMultiaddr(relayMultiaddrs);
     return new Promise(async (resolve, reject) => {
       let timeInterval: NodeJS.Timeout;
       const timeIntervalStart = () => {
@@ -344,7 +349,7 @@ export class Libp2pManager {
       // });
       try {
         await this.libp2p.dialProtocol(
-          this.relayMultiaddr,
+          this.relayMultiaddrs,
           this.libp2p.getProtocols(),
           {
             signal: AbortSignal.timeout(5000),
