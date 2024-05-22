@@ -14,8 +14,8 @@ import { mdns } from "@libp2p/mdns";
 import { GossipSub, gossipsub } from "@chainsafe/libp2p-gossipsub";
 import { peerIdFromString } from "@libp2p/peer-id";
 import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
-import ChatChannel from "@/classes/ChatChannel";
-import ChatUser from "@/classes/ChatUser";
+import ChatChannel from "../../../classes/ChatChannel";
+import ChatUser from "../../../classes/ChatUser";
 export class Libp2pManager {
   private libp2p: Libp2p | undefined;
   private peerId: PeerId | undefined;

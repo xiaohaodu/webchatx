@@ -32,8 +32,8 @@ export class PeerManager {
     // 初始化PeerJS实例
     this.nearPeer.value = new Peer(option.nearPeerId, {
       host: option.host || "webchatx.mayuan.work",
-      port: option.port || 443,
-      secure: true,
+      port: option.port || 80,
+      secure: false,
       path: option.path || "/api/peer",
       config: {
         iceServers: [

@@ -7,7 +7,7 @@ import Components from "unplugin-vue-components/vite";
 import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 import IconsResolver from "unplugin-icons/resolver";
 import Icons from "unplugin-icons/vite";
-import { VitePWA } from "vite-plugin-pwa";
+// import { VitePWA } from "vite-plugin-pwa";
 // https://vitejs.dev/config/
 
 const pathSrc = resolve(__dirname, "src");
@@ -21,36 +21,36 @@ export default defineConfig({
         },
       },
     }),
-    VitePWA({
-      manifest: {
-        name: "WebChatX",
-        description: "WebChatX",
-        theme_color: "#ffffff",
-        icons: [
-          {
-            src: "/WebChatX_192.svg",
-            sizes: "192x192",
-            type: "image/svg+xml",
-          },
-          {
-            src: "/WebChatX_512.svg",
-            sizes: "512x512",
-            type: "image/svg+xml",
-          },
-        ],
-      },
+    // VitePWA({
+    //   manifest: {
+    //     name: "WebChatX",
+    //     description: "WebChatX",
+    //     theme_color: "#ffffff",
+    //     icons: [
+    //       {
+    //         src: "/WebChatX_192.svg",
+    //         sizes: "192x192",
+    //         type: "image/svg+xml",
+    //       },
+    //       {
+    //         src: "/WebChatX_512.svg",
+    //         sizes: "512x512",
+    //         type: "image/svg+xml",
+    //       },
+    //     ],
+    //   },
 
-      strategies: "injectManifest",
-      srcDir: "src",
-      filename: "sw.ts",
-      registerType: "autoUpdate",
-      devOptions: {
-        // 如果想在`vite dev`命令下调试PWA, 必须启用它
-        enabled: true,
-        // Vite在dev模式下会使用浏览器原生的ESModule，将type设置为`"module"`与原先的保持一致
-        type: "module",
-      },
-    }),
+    //   strategies: "injectManifest",
+    //   srcDir: "src",
+    //   filename: "sw.ts",
+    //   registerType: "autoUpdate",
+    //   devOptions: {
+    //     // 如果想在`vite dev`命令下调试PWA, 必须启用它
+    //     enabled: true,
+    //     // Vite在dev模式下会使用浏览器原生的ESModule，将type设置为`"module"`与原先的保持一致
+    //     type: "module",
+    //   },
+    // }),
     AutoImport({
       // Auto import functions from Vue, e.g. ref, reactive, toRef...
       // 自动导入 Vue 相关函数，如：ref, reactive, toRef 等
@@ -95,6 +95,15 @@ export default defineConfig({
     outDir: "./dist",
     emptyOutDir: true,
     target: "es2022",
+    chunkSizeWarningLimit: 1000 * 1024, // 将警告阈值调整为1MB
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "lodash-es": ["lodash-es"],
+        },
+      },
+    },
   },
   resolve: {
     alias: {

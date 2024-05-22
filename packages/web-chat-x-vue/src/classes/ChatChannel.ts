@@ -1,8 +1,4 @@
-import {
-  generateAndSetIdentifier,
-  getPeerIdFromUserId,
-  hashPassword,
-} from "@/utils";
+import { generateAndSetIdentifier, getPeerIdFromUserId } from "@/utils";
 import { PeerId } from "@libp2p/interface";
 import { peerIdFromString } from "@libp2p/peer-id";
 export default class ChatChannel implements ChatChannelInfo {
@@ -15,8 +11,6 @@ export default class ChatChannel implements ChatChannelInfo {
     friendIds: string[],
     channelIds: string[],
     relayMultiaddrs: string[],
-    password: string,
-    hashedPassword: string,
     description: string,
     unique?: string
   ) {
@@ -25,8 +19,6 @@ export default class ChatChannel implements ChatChannelInfo {
     this.userId = userId;
     this.peerId = peerId;
     this.messagesId = messagesId;
-    this.password = password;
-    this.hashedPassword = hashedPassword;
     this.description = description;
     this.friendIds = [...friendIds];
     this.channelIds = [...channelIds];
@@ -52,8 +44,6 @@ export default class ChatChannel implements ChatChannelInfo {
   phone: string;
   location: string;
   role: string;
-  password: string;
-  hashedPassword: string;
   relayMultiaddrs: string[];
   stunTurn: string[];
   friendIds: string[];
@@ -61,7 +51,6 @@ export default class ChatChannel implements ChatChannelInfo {
   messagesId: string;
   static async create(
     name: string,
-    password: string,
     description: string,
     friendIds: string[],
     channelIds: string[],
@@ -83,8 +72,6 @@ export default class ChatChannel implements ChatChannelInfo {
         friendIds,
         channelIds,
         relayMultiaddrs,
-        password,
-        await hashPassword(password),
         description,
         unique
       );
@@ -99,8 +86,6 @@ export default class ChatChannel implements ChatChannelInfo {
         friendIds,
         channelIds,
         relayMultiaddrs,
-        password,
-        await hashPassword(password),
         description,
         unique
       );

@@ -22,8 +22,6 @@ declare global {
     phone: string; // 联系电话
     location: string; // 地址
     role: string; // 身份
-    password: string;
-    hashedPassword: string; // 哈希加密后的密码
     isOnline: boolean;
   }
 

@@ -21,7 +21,6 @@ declare module 'vue' {
     ElHeader: typeof import('element-plus/es')['ElHeader']
     ElIcon: typeof import('element-plus/es')['ElIcon']
     ElIconCopyDocument: typeof import('@element-plus/icons-vue')['CopyDocument']
-    ElIconLock: typeof import('@element-plus/icons-vue')['Lock']
     ElIconUser: typeof import('@element-plus/icons-vue')['User']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElMain: typeof import('element-plus/es')['ElMain']
@@ -37,7 +36,6 @@ declare module 'vue' {
     ElUpload: typeof import('element-plus/es')['ElUpload']
     EmojiComponent: typeof import('./components/EmojiComponent.vue')['default']
     OverdueVideoComponent: typeof import('./components/OverdueComponents/OverdueVideoComponent.vue')['default']
-    PeerVideo: typeof import('./components/TestComponents/PeerVideo.vue')['default']
     PeerVideoComponent: typeof import('./components/PeerVideoComponent.vue')['default']
     QrcodeComponent: typeof import('./components/QrcodeComponent.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
@@ -54,6 +52,5 @@ declare module 'vue' {
     TestEmojiComponent: typeof import('./components/TestComponents/TestEmojiComponent.vue')['default']
     TestPeerVideoComponent: typeof import('./components/TestComponents/TestPeerVideoComponent.vue')['default']
     VideoAudioComponent: typeof import('./components/VideoAudioComponent.vue')['default']
-    VideoComponent: typeof import('./components/overduecomponent/VideoComponent.vue')['default']
   }
 }

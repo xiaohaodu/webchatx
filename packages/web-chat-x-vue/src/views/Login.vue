@@ -58,21 +58,6 @@
                   </template>
                 </el-input>
               </el-form-item>
-              <el-form-item label="密码" prop="password">
-                <el-input
-                  type="password"
-                  autocomplete="new-password"
-                  v-model="form.password"
-                  placeholder="密码"
-                  show-password
-                >
-                  <template #prefix>
-                    <el-icon>
-                      <el-icon-lock />
-                    </el-icon>
-                  </template>
-                </el-input>
-              </el-form-item>
             </div>
           </transition>
 
@@ -143,7 +128,6 @@ const currentUser =
 const form = reactive({
   loginType: currentUser.value ? "local" : "new",
   name: "",
-  password: "",
 });
 
 const rules = computed(() => {
@@ -153,7 +137,6 @@ const rules = computed(() => {
         { required: true, message: "请选择登录方式", trigger: "change" },
       ],
       name: [{ required: true, message: "请输入昵称", trigger: "blur" }],
-      password: [{ required: true, message: "请输入密码", trigger: "blur" }],
     });
   }
 });
@@ -185,15 +168,7 @@ async function submitForm() {
       });
       if (form.loginType === "new") {
         // 存储新用户的哈希密码
-        const chatUser = await ChatUser.create(
-          form.name,
-          form.password,
-          "",
-          [],
-          [],
-          [],
-          ""
-        );
+        const chatUser = await ChatUser.create(form.name, "", [], [], [], "");
         await libp2pManager.createNewUser(chatUser);
         await libp2pManager.createActivateUserDb(chatUser, chatUser.id);
         await libp2pManager.createLibp2pNode(chatUser.peerId);
@@ -227,14 +202,16 @@ async function submitForm() {
           await libp2pManager.startLibp2pNode();
           libp2pManager.setChatUser(currentUser_);
         } else {
-          console.log("请选择本地用户");
+          ElMessage({
+            type: "info",
+            message: "请选择本地用户",
+          });
         }
       }
       ElMessageBox.close();
       router.push({ name: "Homepage" });
       // 清空表单及临时变量
       form.name = "";
-      form.password = "";
     } else {
       console.log("valid ", valid, "error submit!");
     }

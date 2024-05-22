@@ -12,6 +12,12 @@ import { peerIdFromKeys } from "@libp2p/peer-id";
 import { parsePrivateKeySecret } from "../utils/parseSecret.js";
 import { mdns } from "@libp2p/mdns";
 import { gossipsub } from "@chainsafe/libp2p-gossipsub";
+import { Server } from "https";
+// import { readFileSync } from "fs";
+// import { fileURLToPath } from "url";
+// import { dirname, join } from "path";
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = dirname(__filename);
 // import { bootstrap } from "@libp2p/bootstrap";
 /**
  * 定义 RelayServiceOptions 类型，用于配置启动和停止回调函数
@@ -24,12 +30,15 @@ type RelayServiceOptions = {
 /**
  * 启动 Relay 服务的异步函数。接受可选的 RelayServiceOptions 参数以配置启动和停止回调。
  * */
-async function startRelayService(options?: RelayServiceOptions): Promise<void> {
+async function startRelayService(
+  options?: RelayServiceOptions,
+  server?: Server
+): Promise<void> {
   let libp2p: Libp2p | undefined;
 
   try {
     // 创建并初始化 Relay 节点
-    libp2p = await createRelayNode();
+    libp2p = await createRelayNode(server);
     (libp2p.services.dht as KadDHT).setMode("server");
     // 获取 Relay 节点的监听地址，并确保找到一个 IPv4 地址
     const listenMultiaddr = libp2p.getMultiaddrs();
@@ -50,7 +59,7 @@ async function startRelayService(options?: RelayServiceOptions): Promise<void> {
 /**
  * 创建一个用于充当 Relay 节点的 Libp2p 实例。返回一个 Promise<Libp2p>。
  */
-async function createRelayNode(): Promise<Libp2p> {
+async function createRelayNode(_server?: Server): Promise<Libp2p> {
   // 配置 Libp2p 参数，包括：
   //   - 监听地址：设置为任意 IPv4 地址上的 WebSocket 连接
   //   - 传输层：使用 WebSocket 传输，应用所有可用过滤器
@@ -63,7 +72,25 @@ async function createRelayNode(): Promise<Libp2p> {
     addresses: {
       listen: ["/ip4/127.0.0.1/tcp/9000/ws"], // 替换为实际希望监听的 IP 和端口
     },
-    transports: [webSockets({ filter: filters.all })],
+    transports: [
+      webSockets({
+        filter: filters.all,
+        // websocket: {
+        //   cert: readFileSync(
+        //     join(
+        //       __dirname,
+        //       "../certs/webchatx.mayuan.work_nginx/webchatx.mayuan.work_bundle.crt"
+        //     )
+        //   ),
+        //   key: readFileSync(
+        //     join(
+        //       __dirname,
+        //       "../certs/webchatx.mayuan.work_nginx/webchatx.mayuan.work.key"
+        //     )
+        //   ),
+        // },
+      }),
+    ],
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],
     services: {
@@ -95,7 +122,6 @@ async function stopRelayService(
   // 如果提供了有效的 Libp2p 实例，调用其 stop 方法停止服务
   if (libp2p) {
     await libp2p.stop();
-
     // 如果提供了 onStopped 回调，在服务成功停止后调用它
     if (options?.onStopped) {
       options.onStopped();

@@ -2,8 +2,6 @@
   <div>TestBlobComponent</div>
 </template>
 <script lang="ts" setup>
-import generateAndSetIdentifier from "@/hooks/generateAndSetIdentifier";
-
 // 定义分隔符，这里使用一个不太可能在数据中出现的字节序列
 const separatorBytes = new Uint8Array([0, 255, 238, 221]); // 对应于\x00\xFF\xEE\xDD
 
@@ -87,13 +85,14 @@ async function main() {
 }
 
 main();
+import { generateAndSetIdentifier } from "@/utils";
 import { Typeson } from "typeson";
 import { date, blob, file, arraybuffer } from "typeson-registry";
 
 const { peerId } = await generateAndSetIdentifier();
 // 初始化Typeson实例并配置注册表
 const typeson = new Typeson().register([date, blob, file, arraybuffer]);
-const _peerIdJson = await typeson.encapsulate(peerId.value);
+const _peerIdJson = await typeson.encapsulate(peerId);
 const __peerIdJson = typeson.stringify(_peerIdJson);
-console.log(peerId.value?.multihash.digest.buffer, _peerIdJson, __peerIdJson);
+console.log(peerId?.multihash.digest.buffer, _peerIdJson, __peerIdJson);
 </script>

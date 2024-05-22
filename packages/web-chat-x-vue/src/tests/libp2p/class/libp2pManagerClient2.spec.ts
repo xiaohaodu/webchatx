@@ -1,4 +1,4 @@
-import { Libp2pManager } from "./Libp2pManager.ts";
+import { Libp2pManager } from "./Libp2pManager.spec.ts";
 import { multiaddr } from "@multiformats/multiaddr";
 
 const libp2pServer = new Libp2pManager();

@@ -83,9 +83,6 @@ import crc32 from "crc/crc32";
 import { peerIdFromKeys, peerIdFromString } from "@libp2p/peer-id";
 import { PeerId } from "@libp2p/interface";
 import { generateKeyPair } from "@libp2p/crypto/keys";
-import { sha256 } from "multiformats/hashes/sha2";
-import { toHex } from "multiformats/bytes";
-
 /**
  * 生成一个Ed25519类型的PeerId。
  * 使用`@libp2p/crypto`生成密钥对，并通过公钥创建PeerId。
@@ -94,24 +91,6 @@ async function generatePeerId(): Promise<PeerId> {
   const keyPair = await generateKeyPair("Ed25519");
   const peerId = await peerIdFromKeys(keyPair.public.bytes, keyPair.bytes);
   return peerId;
-}
-
-/**
- * 计算给定密钥（字符串或Uint8Array）的SHA-256哈希，并将其转换为十六进制字符串。
- */
-async function getKeyHash(key: string | Uint8Array): Promise<string> {
-  let keyUint8Array: Uint8Array;
-
-  if (key instanceof Uint8Array) {
-    keyUint8Array = key;
-  } else {
-    // 使用 TextEncoder 将字符串编码为 Uint8Array
-    const encoder = new TextEncoder();
-    keyUint8Array = encoder.encode(key);
-  }
-  // 使用 @libp2p/crypto 提供的 sha256 方法计算哈希
-  const hash = await sha256.encode(keyUint8Array);
-  return toHex(hash);
 }
 /**
  * 生成指定长度的随机十六进制字符字符串，用于混淆代码等场景。
@@ -131,19 +110,11 @@ export function generateRandomHexChars(length = 8): string {
  */
 export async function buildUserId(
   peerId: string,
-  obfuscationCode: string,
-  hash = false
+  obfuscationCode: string
 ): Promise<string> {
-  if (hash) {
-    const peerIdHash = await getKeyHash(peerId);
-    const combined = peerIdHash + obfuscationCode;
-    const crcChecksum = crc32(combined).toString(16);
-    return combined + crcChecksum;
-  } else {
-    const combined = peerId + obfuscationCode;
-    const crcChecksum = crc32(combined).toString(16);
-    return combined + crcChecksum;
-  }
+  const combined = peerId + obfuscationCode;
+  const crcChecksum = crc32(combined).toString(16);
+  return combined + crcChecksum;
 }
 
 /**
@@ -223,12 +194,6 @@ export function getPeerIdFromUserId(userId: string): string {
   return peerId;
 }
 
-/**
- * 异步函数，计算并返回密码的SHA-256哈希值。
- */
-export async function hashPassword(password: string): Promise<string> {
-  return await getKeyHash(password);
-}
 /**
  * 生成或设置标识符（PeerId、混淆代码、用户ID）的方法。
  * 可以接受外部提供的PeerId字符串，或自动生成，同时创建混淆代码和用户ID。

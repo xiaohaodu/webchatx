@@ -1,6 +1,9 @@
 services:
   web-chat-x-express:
     image: duxiaohao/pm2:v1
+    ports:
+      - 10000:9000
+      - 9099:8099
     networks:
       - web-chat-x
       - docker
@@ -13,6 +16,8 @@ services:
   web-chat-x-vue:
     image: nginx:stable-perl
     container_name: web-chat-x-vue
+    ports:
+      - 9100:80
     networks:
       - web-chat-x
       - docker
@@ -22,26 +27,26 @@ services:
     volumes:
       - "./nginx:/etc/nginx/conf.d"
       - "./web-chat-x-vue:/etc/nginx/html"
-  coturn:
-    image: coturn/coturn:4.6.2
-    container_name: coturn-server
-    command: ["--min-port=49160", "--max-port=49200"]
-    ports:
-      - "3478:3478"
-      - "3479:3479"
-      - "3478:3478/udp"
-      - "3479:3479/udp"
-      - "5349:5349"
-      - "5350:5350"
-      - "5349:5349/udp"
-      - "5350:5350/udp"
-      - "49160-49200:49160-49200/udp"
-    volumes:
-      - ./turnserver.conf:/etc/turnserver.conf
-    restart: always
-    networks:
-      - docker
-      - web-chat-x
+  # coturn:
+  #   image: coturn/coturn:4.6.2
+  #   container_name: coturn-server
+  #   command: ["--min-port=49160", "--max-port=49200"]
+  #   ports:
+  #     - "3478:3478"
+  #     - "3479:3479"
+  #     - "3478:3478/udp"
+  #     - "3479:3479/udp"
+  #     - "5349:5349"
+  #     - "5350:5350"
+  #     - "5349:5349/udp"
+  #     - "5350:5350/udp"
+  #     - "49160-49200:49160-49200/udp"
+  #   volumes:
+  #     - ./turnserver.conf:/etc/turnserver.conf
+  #   restart: always
+  #   networks:
+  #     - docker
+  #     - web-chat-x
 networks:
   web-chat-x:
     name: web-chat-x

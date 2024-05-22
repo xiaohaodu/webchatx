@@ -1,4 +1,4 @@
-import { Libp2pManager } from "./Libp2pManager.ts";
+import { Libp2pManager } from "./Libp2pManager.spec.ts";
 import { peerIdFromString } from "@libp2p/peer-id";
 
 const libp2pServer = new Libp2pManager();

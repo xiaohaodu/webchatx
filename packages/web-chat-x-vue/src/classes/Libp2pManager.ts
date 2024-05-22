@@ -7,7 +7,6 @@ import { webSockets } from "@libp2p/websockets";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 import { echo } from "@libp2p/echo";
 import * as filters from "@libp2p/websockets/filters";
-import { KadDHT, kadDHT } from "@libp2p/kad-dht";
 import {
   PeerId,
   PeerStore,
@@ -27,7 +26,7 @@ import { cloneDeep } from "lodash-es";
 import { peerIdFromPeerId, peerIdFromString } from "@libp2p/peer-id";
 import { PeerManager } from "./PeerManager";
 import ChatChannel from "./ChatChannel";
-import { base64ToFile, createLoopFunction, fileToBase64 } from "@/utils";
+import { base64ToFile, fileToBase64 } from "@/utils";
 const topics = [
   `webChatX._peer-discovery._p2p._pubsub`, // It's recommended but not required to extend the global space
   // "_peer-discovery._p2p._pubsub", // Include if you want to participate in the global space
@@ -241,10 +240,6 @@ export class Libp2pManager {
       services: {
         identify: identify(),
         echo: echo(),
-        dht: kadDHT({
-          clientMode: false,
-          kBucketSize: 20,
-        }),
         pubsub: gossipsub({
           emitSelf: false,
           fallbackToFloodsub: true,
@@ -254,7 +249,6 @@ export class Libp2pManager {
       },
       peerId,
     });
-    (this.libp2p.services.dht as KadDHT).setMode("server");
     this.peerId = this.libp2p.peerId;
     this.peerStore = this.libp2p.peerStore;
     await this.libp2pHandleExpand();
@@ -369,12 +363,10 @@ export class Libp2pManager {
   ) {
     const channel = await ChatChannel.create(
       channelName,
-      "",
       channelDescription,
       [],
       [],
       [],
-      "",
       "",
       "",
       channelId
@@ -405,11 +397,9 @@ export class Libp2pManager {
       const newSubscriber = await ChatUser.create(
         "",
         "",
-        "",
         [],
         [],
         [],
-        "",
         "",
         "",
         subscriber.toString()
@@ -426,7 +416,6 @@ export class Libp2pManager {
         channel.friendIds = channel.friendIds.filter((friendId) => {
           return subscriberIds.includes(friendId);
         });
-        console.log("subscribers", channel, subscribers);
         for (const subscriber of subscribers) {
           promiseAllArray.push(fallbackCall(channel, subscriber));
         }
@@ -558,7 +547,6 @@ export class Libp2pManager {
         ]);
         const friend = await ChatUser.create(
           remoteMessageObject.user.name,
-          "",
           remoteMessageObject.user.description,
           [],
           [],
@@ -641,7 +629,6 @@ export class Libp2pManager {
               console.log(topic, pubsubSendMessage, signedMessage);
               const channelSubscribe = await ChatUser.create(
                 pubsubSendMessage.user.name,
-                "",
                 pubsubSendMessage.user.description,
                 [],
                 [],
@@ -851,7 +838,6 @@ export class Libp2pManager {
             messages.messages.push(messageMe, messageYou);
             const friend = await ChatUser.create(
               responseObject.user.name,
-              "",
               "",
               [],
               [],
