@@ -13,11 +13,6 @@ import { parsePrivateKeySecret } from "../utils/parseSecret.js";
 import { mdns } from "@libp2p/mdns";
 import { gossipsub } from "@chainsafe/libp2p-gossipsub";
 import { Server } from "https";
-// import { readFileSync } from "fs";
-// import { fileURLToPath } from "url";
-// import { dirname, join } from "path";
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = dirname(__filename);
 // import { bootstrap } from "@libp2p/bootstrap";
 /**
  * 定义 RelayServiceOptions 类型，用于配置启动和停止回调函数
@@ -75,20 +70,6 @@ async function createRelayNode(_server?: Server): Promise<Libp2p> {
     transports: [
       webSockets({
         filter: filters.all,
-        // websocket: {
-        //   cert: readFileSync(
-        //     join(
-        //       __dirname,
-        //       "../certs/webchatx.mayuan.work_nginx/webchatx.mayuan.work_bundle.crt"
-        //     )
-        //   ),
-        //   key: readFileSync(
-        //     join(
-        //       __dirname,
-        //       "../certs/webchatx.mayuan.work_nginx/webchatx.mayuan.work.key"
-        //     )
-        //   ),
-        // },
       }),
     ],
     connectionEncryption: [noise()],

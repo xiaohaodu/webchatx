@@ -40,7 +40,7 @@ export class Libp2pManager {
   private channels: Ref<ChatChannel[]> | undefined;
   private subscribers: Ref<ChatUser[]> | undefined;
   private relayMultiaddr: Multiaddr = multiaddr(
-    "/dns/webchatx.mayuan.work/tcp/9000/ws/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg"
+    "/dns/webchatx.mayuan.work/tcp/9000/wss/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg"
   );
   public databaseManager: DatabaseManager | undefined;
   public peerManager: PeerManager | undefined;

@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "nodemon ./src/main",
     "build": "tsc && ncc build ./dist/main.js -o build && pnpm copy",
-    "copy": "copyfiles ecosystem.config.cjs build && copyfiles src/controllers/certs/**/* -u 2 build",
+    "copy": "copyfiles ecosystem.config.cjs build",
     "tsc": "tsc"
   },
   "keywords": [],
