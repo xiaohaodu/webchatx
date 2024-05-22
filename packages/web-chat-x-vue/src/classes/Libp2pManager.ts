@@ -312,14 +312,17 @@ export class Libp2pManager {
       // this.libp2p.addEventListener("peer:update", (peerUpdate) => {
       //   console.log("peer:update ", peerUpdate.detail);
       // });
-      // this.libp2p.addEventListener("self:peer:update", (peerUpdate) => {
-      //   console.log("self:peer:update ", peerUpdate.detail);
-      //   console.log("protocols", this.libp2p?.getProtocols());
-      //   console.log("multiaddrs", this.libp2p?.getMultiaddrs());
-      //   console.log("dialQueue", this.libp2p?.getDialQueue());
-      //   console.log("connections", this.libp2p?.getConnections());
-      //   console.log("peers", this.libp2p?.getPeers());
-      // });
+      this.libp2p.addEventListener("self:peer:update", (peerUpdate) => {
+        console.log("self:peer:update ", peerUpdate.detail);
+        console.log("protocols", this.libp2p?.getProtocols());
+        console.log("multiaddrs", this.libp2p?.getMultiaddrs());
+        this.libp2p?.getMultiaddrs().forEach((multiaddr, index) => {
+          console.log(`multiaddr ${index} ${multiaddr.toString()}`);
+        });
+        console.log("dialQueue", this.libp2p?.getDialQueue());
+        console.log("connections", this.libp2p?.getConnections());
+        console.log("peers", this.libp2p?.getPeers());
+      });
       this.libp2p.addEventListener("start", () => {
         console.log("start");
         // console.log("protocols", this.libp2p?.getProtocols());
