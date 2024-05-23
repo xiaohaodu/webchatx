@@ -130,7 +130,7 @@ async function friendRequest() {
         privateChatFormData.userId
       );
       const remotePeerId = peerIdFromString(remotePeerIdString);
-      // "/dns/webchatx.mayuan.work/tcp/10000/ws/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg/p2p-circuit/p2p/"
+      // "/dns/webchatx.mayuan.work/tcp/10000/ws/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg/p2p-circuit/webrtc/p2p/"
       await libp2pManager.requestFriend(
         remotePeerId,
         privateChatFormData.validationMessage ||
@@ -149,14 +149,11 @@ async function friendRequest() {
 }
 
 // 创建channel 相关内容
-const channels = [
-  {
-    name: "memeee",
-    subscribers: 11,
-    description: "Revélez votre talent",
-  },
-  // ... other channel data
-];
+const channels: {
+  name: string;
+  subscribers: number;
+  description: string;
+}[] = [];
 const refCreateChannelForm = ref<FormInstance>();
 const createChannelFormData = reactive({
   name: "",

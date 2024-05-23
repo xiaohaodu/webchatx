@@ -52,7 +52,11 @@ export class Libp2pManager {
   private running: boolean = false;
   private textDecoder = new TextDecoder();
   private textEncoder = new TextEncoder();
-
+  private relayLink =
+    "/dns/webchatx.mayuan.work/tcp/10000/ws/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg/p2p-circuit/webrtc/p2p/";
+  getConnectMultiaddr(peerId: string) {
+    return multiaddr(this.relayLink + peerId);
+  }
   getChannels() {
     return this.channels;
   }
@@ -190,6 +194,8 @@ export class Libp2pManager {
         cloneDeep(subscriber)
       );
     }
+    this.channels!.value =
+      (await this.databaseManager?.activatedUserDb.channels.toArray())!;
   }
 
   getChatUser() {
@@ -308,9 +314,9 @@ export class Libp2pManager {
           }
         }
       });
-      // this.libp2p.addEventListener("peer:discovery", (peerIdInfo) => {
-      //   console.log("peer:discovery ", peerIdInfo.detail);
-      // });
+      this.libp2p.addEventListener("peer:discovery", (peerIdInfo) => {
+        console.log("peer:discovery ", peerIdInfo.detail);
+      });
       // this.libp2p.addEventListener("peer:identify", (identifyResult) => {
       //   console.log("peer:identify ", identifyResult.detail);
       // });
@@ -377,6 +383,7 @@ export class Libp2pManager {
       [],
       "",
       "",
+      "",
       channelId
     );
     (this.libp2p?.services.pubsub as PubSub<GossipsubEvents>).subscribe(
@@ -408,6 +415,7 @@ export class Libp2pManager {
         [],
         [],
         [],
+        "",
         "",
         "",
         subscriber.toString()
@@ -478,8 +486,11 @@ export class Libp2pManager {
       friendPeerIdString: string
     ) => {
       try {
-        await this.libp2p?.dialProtocol(friendPeerId, "/echo/1.0.0");
-        console.log("connect success", friendPeerIdString);
+        await this.libp2p?.dialProtocol(
+          this.getConnectMultiaddr(friendPeerIdString),
+          "/echo/1.0.0"
+        );
+        console.log("connect success", friendPeerId, friendPeerIdString);
       } catch (_e) {
         console.log("connect ", friendPeerIdString, " failed", _e);
       }
@@ -794,7 +805,7 @@ export class Libp2pManager {
         timeInterval.value = setInterval(async () => {
           try {
             const stream = await this.libp2p?.dialProtocol(
-              remotePeer,
+              this.getConnectMultiaddr(remotePeer.toString()),
               "/friends/add"
             )!;
             let responseString = "";
