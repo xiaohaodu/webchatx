@@ -374,8 +374,8 @@ export class Libp2pManager {
   cyclicQuery() {
     this.connectFriends();
     this.subscribe();
-    const fn = () => {
-      console.log(this.libp2p);
+    const fn = async () => {
+      console.log(await this.libp2p?.peerStore.all());
       clearTimeout(timer);
       timer = setTimeout(fn, 1000);
     };
