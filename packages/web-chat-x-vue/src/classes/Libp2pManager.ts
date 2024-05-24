@@ -375,7 +375,10 @@ export class Libp2pManager {
     this.connectFriends();
     this.subscribe();
     const fn = async () => {
-      console.log(await this.libp2p?.peerStore.all());
+      console.log(
+        "peers has been discovered",
+        await this.libp2p?.peerStore.all()
+      );
       clearTimeout(timer);
       timer = setTimeout(fn, 1000);
     };
@@ -819,82 +822,84 @@ export class Libp2pManager {
   ): Promise<Stream> {
     return new Promise(async (resolve, _) => {
       const timeInterval = ref<NodeJS.Timeout>();
-      const timeIntervalStart = (remotePeer: PeerId | Multiaddr) => {
-        timeInterval.value = setInterval(async () => {
-          try {
-            const stream = await this.libp2p?.dialProtocol(
-              this.getConnectMultiaddr(remotePeer.toString()),
-              "/friends/add"
-            )!;
-            let responseString = "";
-            await pipe(
-              [
-                new TextEncoder().encode(
-                  JSON.stringify({
-                    message: validationMessage,
-                    user: {
-                      userId: this.chatUser?.value.userId,
-                      peerId: this.chatUser?.value.id,
-                      name: this.chatUser?.value.name,
-                      description: this.chatUser?.value.description,
-                      location: this.chatUser?.value.location,
-                      role: this.chatUser?.value.role,
-                      email: this.chatUser?.value.email,
-                      phone: this.chatUser?.value.phone,
-                      avatar: this.chatUser?.value.avatar,
-                    },
-                  })
-                ),
-              ],
-              stream,
-              async (source) => {
-                for await (const buf of source) {
-                  responseString = this.textDecoder.decode(buf.subarray());
-                }
+      const timeIntervalStart = async (remotePeer: PeerId | Multiaddr) => {
+        try {
+          const stream = await this.libp2p?.dialProtocol(
+            this.getConnectMultiaddr(remotePeer.toString()),
+            "/friends/add"
+          )!;
+          let responseString = "";
+          await pipe(
+            [
+              new TextEncoder().encode(
+                JSON.stringify({
+                  message: validationMessage,
+                  user: {
+                    userId: this.chatUser?.value.userId,
+                    peerId: this.chatUser?.value.id,
+                    name: this.chatUser?.value.name,
+                    description: this.chatUser?.value.description,
+                    location: this.chatUser?.value.location,
+                    role: this.chatUser?.value.role,
+                    email: this.chatUser?.value.email,
+                    phone: this.chatUser?.value.phone,
+                    avatar: this.chatUser?.value.avatar,
+                  },
+                })
+              ),
+            ],
+            stream,
+            async (source) => {
+              for await (const buf of source) {
+                responseString = this.textDecoder.decode(buf.subarray());
               }
-            );
-            const responseObject = JSON.parse(
-              responseString
-            ) as ProtocolFriendAdd;
-            const [messages, messageMe, messageYou] = await Promise.all([
-              ChatMessageAggregation.create(
-                this.chatUser?.value.id!,
-                responseObject.user.peerId
-              ),
-              ChatMessage.create(
-                validationMessage,
-                this.chatUser?.value.id!,
-                responseObject.user.peerId
-              ),
-              ChatMessage.create(
-                responseObject.message,
-                responseObject.user.peerId,
-                this.chatUser?.value.id
-              ),
-            ]);
-            messages.messages.push(messageMe, messageYou);
-            const friend = await ChatUser.create(
-              responseObject.user.name,
-              "",
-              [],
-              [],
-              [],
-              messages.id,
-              "friend" + responseObject.user.peerId,
-              responseObject.user.userId
-            );
-            await Promise.all([
-              this.addFriend(friend),
-              this.databaseManager?.activatedUserDb.messages.put(messages),
-            ]);
-            ElMessageBox.close();
-            AlertLoading.value = false;
-            clearInterval(timeInterval.value);
-            resolve(stream);
-          } catch (error) {
-            console.log("addFriend", error);
-          }
-        }, 1500);
+            }
+          );
+          const responseObject = JSON.parse(
+            responseString
+          ) as ProtocolFriendAdd;
+          const [messages, messageMe, messageYou] = await Promise.all([
+            ChatMessageAggregation.create(
+              this.chatUser?.value.id!,
+              responseObject.user.peerId
+            ),
+            ChatMessage.create(
+              validationMessage,
+              this.chatUser?.value.id!,
+              responseObject.user.peerId
+            ),
+            ChatMessage.create(
+              responseObject.message,
+              responseObject.user.peerId,
+              this.chatUser?.value.id
+            ),
+          ]);
+          messages.messages.push(messageMe, messageYou);
+          const friend = await ChatUser.create(
+            responseObject.user.name,
+            "",
+            [],
+            [],
+            [],
+            messages.id,
+            "friend" + responseObject.user.peerId,
+            responseObject.user.userId
+          );
+          await Promise.all([
+            this.addFriend(friend),
+            this.databaseManager?.activatedUserDb.messages.put(messages),
+          ]);
+          ElMessageBox.close();
+          AlertLoading.value = false;
+          clearInterval(timeInterval.value);
+          resolve(stream);
+        } catch (error) {
+          console.log("addFriend", error);
+          timeInterval.value = setTimeout(
+            () => timeIntervalStart(remotePeer),
+            1000
+          );
+        }
       };
 
       const AlertMessage = ref("寻找朋友节点中");

@@ -73,7 +73,7 @@
 
 <script setup lang="ts">
 import useLibp2p from "@/hooks/useLibp2p";
-import { useRoute } from "vue-router";
+import { useRouter } from "vue-router";
 
 const { libp2pManager } = useLibp2p();
 // const chatUser = libp2pManager.getChatUser();
@@ -84,10 +84,11 @@ const handleMenuSelect = (index: string) => {
   console.log(`selected menu item: ${index}`);
 };
 const activeMenu = ref<string>();
-const route = useRoute();
+const router = useRouter();
 onMounted(() => {
   activeMenu.value =
-    (route.meta.activeMenu as string | undefined) || route.fullPath;
+    (router.currentRoute.value.meta.activeMenu as string | undefined) ||
+    router.currentRoute.value.fullPath;
 });
 </script>
 <style lang="scss" scoped>
