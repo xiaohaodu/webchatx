@@ -34,6 +34,8 @@
     "@libp2p/bootstrap": "^10.0.17",
     "@libp2p/circuit-relay-v2": "^1.0.17",
     "@libp2p/crypto": "^4.0.4",
+    "@libp2p/dcutr": "^1.0.21",
+    "@libp2p/delegated-peer-routing": "^4.0.14",
     "@libp2p/echo": "^1.0.1",
     "@libp2p/floodsub": "^9.0.14",
     "@libp2p/identify": "^1.0.16",

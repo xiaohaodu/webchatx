@@ -27,7 +27,7 @@ import { peerIdFromPeerId, peerIdFromString } from "@libp2p/peer-id";
 import { PeerManager } from "./PeerManager";
 import ChatChannel from "./ChatChannel";
 import { base64ToFile, fileToBase64 } from "@/utils";
-import { mdns } from "@libp2p/mdns";
+import { dcutr } from "@libp2p/dcutr";
 const topics = [
   `webChatX._peer-discovery._p2p._pubsub`, // It's recommended but not required to extend the global space
   // "_peer-discovery._p2p._pubsub", // Include if you want to participate in the global space
@@ -55,6 +55,164 @@ export class Libp2pManager {
   private textEncoder = new TextEncoder();
   private relayLink =
     "/dns/webchatx.mayuan.work/tcp/10000/ws/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg/p2p-circuit/webrtc/p2p/";
+  async createLibp2pNode(peerId?: PeerId): Promise<void> {
+    this.libp2p = await createLibp2p({
+      addresses: {
+        listen: ["/webrtc"],
+      },
+      transports: [
+        webSockets({ filter: filters.dnsWsOrWss }),
+        webRTC({
+          rtcConfiguration: {
+            iceServers: [
+              {
+                urls: "stun:stun.l.google.com:19302",
+              },
+              {
+                urls: "stun:global.stun.twilio.com:3478",
+              },
+              {
+                urls: "turn:webchatx.stun.mayuan.work:3478",
+                username: "dxh",
+                credential: "187139",
+              },
+            ],
+          },
+        }),
+        circuitRelayTransport({
+          discoverRelays: 1,
+        }),
+      ],
+      connectionEncryption: [noise()],
+      streamMuxers: [yamux()],
+      peerDiscovery: [
+        pubsubPeerDiscovery({
+          interval: 10000,
+          topics: topics, // defaults to ['_peer-discovery._p2p._pubsub']
+          listenOnly: false,
+        }),
+      ],
+      services: {
+        identify: identify(),
+        echo: echo(),
+        pubsub: gossipsub({
+          emitSelf: false,
+          fallbackToFloodsub: true,
+          floodPublish: true,
+          doPX: true,
+        }),
+        dcutr: dcutr(),
+      },
+      peerId,
+    });
+    this.peerId = this.libp2p.peerId;
+    this.peerStore = this.libp2p.peerStore;
+    await this.libp2pHandleExpand();
+    this.running = true;
+  }
+
+  async startLibp2pNode(relayMultiaddrs?: Multiaddr[]): Promise<void> {
+    relayMultiaddrs?.length && this.setRelayMultiaddr(relayMultiaddrs);
+    return new Promise(async (resolve, reject) => {
+      let timeInterval: NodeJS.Timeout;
+      const timeIntervalStart = () => {
+        timeInterval = setTimeout(() => {
+          const multiaddrs = this.libp2p!.getMultiaddrs();
+          if (multiaddrs.length) {
+            clearInterval(timeInterval);
+            resolve();
+          } else {
+            timeInterval = setTimeout(timeIntervalStart, 1000);
+          }
+        }, 1500);
+      };
+
+      if (!this.libp2p) {
+        return reject(
+          new Error("Libp2p node not created yet. Call createLibp2pNode first.")
+        );
+      }
+      // this.libp2p.addEventListener("connection:open", (connection) => {
+      //   console.log("connection:open", connection.detail);
+      // });
+      // this.libp2p.addEventListener("connection:close", (connection) => {
+      //   console.log("connection:open", connection.detail);
+      // });
+      // this.libp2p.addEventListener("connection:prune", (connection) => {
+      //   console.log("connection:prune", connection.detail);
+      // });
+      this.libp2p.addEventListener("peer:connect", (peerId) => {
+        console.log("peer:connect ", peerId.detail);
+        for (const index in this.friends?.value!) {
+          if (this.friends?.value[index].id! == peerId.detail.toString()) {
+            this.friends!.value[index].isOnline = true;
+            return;
+          }
+        }
+      });
+      this.libp2p.addEventListener("peer:disconnect", (peerId) => {
+        console.log("peer:disconnect ", peerId.detail);
+        for (const index in this.friends?.value!) {
+          if (this.friends?.value[index].id! == peerId.detail.toString()) {
+            this.friends!.value[index].isOnline = false;
+            return;
+          }
+        }
+      });
+      this.libp2p.addEventListener("peer:discovery", (peerIdInfo) => {
+        console.log("peer:discovery ", peerIdInfo.detail);
+      });
+      // this.libp2p.addEventListener("peer:identify", (identifyResult) => {
+      //   console.log("peer:identify ", identifyResult.detail);
+      // });
+      // this.libp2p.addEventListener("peer:update", (peerUpdate) => {
+      //   console.log("peer:update ", peerUpdate.detail);
+      // });
+      this.libp2p.addEventListener("self:peer:update", (peerUpdate) => {
+        console.log("self:peer:update ", peerUpdate.detail);
+        console.log("protocols", this.libp2p?.getProtocols());
+        console.log("multiaddrs", this.libp2p?.getMultiaddrs());
+        this.libp2p?.getMultiaddrs().forEach((multiaddr, index) => {
+          console.log(`multiaddr ${index} ${multiaddr.toString()}`);
+        });
+        console.log("dialQueue", this.libp2p?.getDialQueue());
+        console.log("connections", this.libp2p?.getConnections());
+        console.log("peers", this.libp2p?.getPeers());
+      });
+      this.libp2p.addEventListener("start", () => {
+        console.log("start");
+        // console.log("protocols", this.libp2p?.getProtocols());
+        // console.log("multiaddrs", this.libp2p?.getMultiaddrs());
+        // console.log("dialQueue", this.libp2p?.getDialQueue());
+        // console.log("connections", this.libp2p?.getConnections());
+        // console.log("peers", this.libp2p?.getPeers());
+        this.running = true;
+      });
+      this.libp2p.addEventListener("stop", () => {
+        console.log("stop");
+        this.running = false;
+      });
+      // this.libp2p.addEventListener("transport:close", (listener) => {
+      //   console.log("transport:close", listener.detail);
+      // });
+      // this.libp2p.addEventListener("transport:listening", (listener) => {
+      //   console.log("transport:listening", listener.detail);
+      // });
+      try {
+        await this.libp2p.dialProtocol(
+          this.relayMultiaddrs,
+          this.libp2p.getProtocols(),
+          {
+            signal: AbortSignal.timeout(5000),
+          }
+        );
+        timeIntervalStart();
+        this.cyclicQuery();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
   getConnectMultiaddr(peerId: string) {
     return multiaddr(this.relayLink + peerId);
   }
@@ -212,171 +370,16 @@ export class Libp2pManager {
   }
 
   constructor() {}
-  async createLibp2pNode(peerId?: PeerId): Promise<void> {
-    this.libp2p = await createLibp2p({
-      addresses: {
-        listen: ["/webrtc"],
-      },
-      transports: [
-        webSockets({ filter: filters.dnsWsOrWss }),
-        webRTC({
-          rtcConfiguration: {
-            iceServers: [
-              {
-                urls: "stun:stun.l.google.com:19302",
-              },
-              {
-                urls: "stun:global.stun.twilio.com:3478",
-              },
-              {
-                urls: "turn:webchatx.stun.mayuan.work:3478",
-                username: "dxh",
-                credential: "187139",
-              },
-            ],
-          },
-        }),
-        circuitRelayTransport({
-          discoverRelays: 1,
-        }),
-      ],
-      connectionEncryption: [noise()],
-      streamMuxers: [yamux()],
-      peerDiscovery: [
-        pubsubPeerDiscovery({
-          interval: 10000,
-          topics: topics, // defaults to ['_peer-discovery._p2p._pubsub']
-          listenOnly: false,
-        }),
-        mdns(),
-      ],
-      services: {
-        identify: identify(),
-        echo: echo(),
-        pubsub: gossipsub({
-          emitSelf: false,
-          fallbackToFloodsub: true,
-          floodPublish: true,
-          doPX: true,
-        }),
-      },
-      peerId,
-    });
-    this.peerId = this.libp2p.peerId;
-    this.peerStore = this.libp2p.peerStore;
-    await this.libp2pHandleExpand();
-    this.running = true;
-  }
-
-  async startLibp2pNode(relayMultiaddrs?: Multiaddr[]): Promise<void> {
-    relayMultiaddrs?.length && this.setRelayMultiaddr(relayMultiaddrs);
-    return new Promise(async (resolve, reject) => {
-      let timeInterval: NodeJS.Timeout;
-      const timeIntervalStart = () => {
-        timeInterval = setTimeout(() => {
-          const multiaddrs = this.libp2p!.getMultiaddrs();
-          if (multiaddrs.length) {
-            clearInterval(timeInterval);
-            resolve();
-          } else {
-            timeInterval = setTimeout(timeIntervalStart, 1000);
-          }
-        }, 1500);
-      };
-
-      if (!this.libp2p) {
-        return reject(
-          new Error("Libp2p node not created yet. Call createLibp2pNode first.")
-        );
-      }
-      // this.libp2p.addEventListener("connection:open", (connection) => {
-      //   console.log("connection:open", connection.detail);
-      // });
-      // this.libp2p.addEventListener("connection:close", (connection) => {
-      //   console.log("connection:open", connection.detail);
-      // });
-      // this.libp2p.addEventListener("connection:prune", (connection) => {
-      //   console.log("connection:prune", connection.detail);
-      // });
-      this.libp2p.addEventListener("peer:connect", (peerId) => {
-        console.log("peer:connect ", peerId.detail);
-        for (const index in this.friends?.value!) {
-          if (this.friends?.value[index].id! == peerId.detail.toString()) {
-            this.friends!.value[index].isOnline = true;
-            return;
-          }
-        }
-      });
-      this.libp2p.addEventListener("peer:disconnect", (peerId) => {
-        console.log("peer:disconnect ", peerId.detail);
-        for (const index in this.friends?.value!) {
-          if (this.friends?.value[index].id! == peerId.detail.toString()) {
-            this.friends!.value[index].isOnline = false;
-            return;
-          }
-        }
-      });
-      this.libp2p.addEventListener("peer:discovery", (peerIdInfo) => {
-        console.log("peer:discovery ", peerIdInfo.detail);
-      });
-      // this.libp2p.addEventListener("peer:identify", (identifyResult) => {
-      //   console.log("peer:identify ", identifyResult.detail);
-      // });
-      // this.libp2p.addEventListener("peer:update", (peerUpdate) => {
-      //   console.log("peer:update ", peerUpdate.detail);
-      // });
-      this.libp2p.addEventListener("self:peer:update", (peerUpdate) => {
-        console.log("self:peer:update ", peerUpdate.detail);
-        console.log("protocols", this.libp2p?.getProtocols());
-        console.log("multiaddrs", this.libp2p?.getMultiaddrs());
-        this.libp2p?.getMultiaddrs().forEach((multiaddr, index) => {
-          console.log(`multiaddr ${index} ${multiaddr.toString()}`);
-        });
-        console.log("dialQueue", this.libp2p?.getDialQueue());
-        console.log("connections", this.libp2p?.getConnections());
-        console.log("peers", this.libp2p?.getPeers());
-      });
-      this.libp2p.addEventListener("start", () => {
-        console.log("start");
-        // console.log("protocols", this.libp2p?.getProtocols());
-        // console.log("multiaddrs", this.libp2p?.getMultiaddrs());
-        // console.log("dialQueue", this.libp2p?.getDialQueue());
-        // console.log("connections", this.libp2p?.getConnections());
-        // console.log("peers", this.libp2p?.getPeers());
-        this.running = true;
-      });
-      this.libp2p.addEventListener("stop", () => {
-        console.log("stop");
-        this.running = false;
-      });
-      // this.libp2p.addEventListener("transport:close", (listener) => {
-      //   console.log("transport:close", listener.detail);
-      // });
-      // this.libp2p.addEventListener("transport:listening", (listener) => {
-      //   console.log("transport:listening", listener.detail);
-      // });
-      try {
-        await this.libp2p.dialProtocol(
-          this.relayMultiaddrs,
-          this.libp2p.getProtocols(),
-          {
-            signal: AbortSignal.timeout(5000),
-          }
-        );
-        timeIntervalStart();
-        this.cyclicQuery();
-      } catch (error) {
-        reject(error);
-      }
-    });
-  }
 
   cyclicQuery() {
     this.connectFriends();
     this.subscribe();
-    setInterval(() => {
+    const fn = () => {
       console.log(this.libp2p);
-    }, 1000);
+      clearTimeout(timer);
+      timer = setTimeout(fn, 1000);
+    };
+    let timer: NodeJS.Timeout = setTimeout(fn, 1000);
   }
 
   async subscribeChannel(
