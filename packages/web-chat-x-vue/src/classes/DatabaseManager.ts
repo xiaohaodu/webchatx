@@ -52,7 +52,7 @@ export class DatabaseManager {
       channels: "&id",
       subscribers: "&id",
       messages:
-        "&id, postUserId, answerUserId, channelId, &[postUserId+answerUserId], &[postUserId+channelId]",
+        "&[postUserId+answerUserId], postUserId, answerUserId, channelId, id, [postUserId+channelId]",
     });
     try {
       await db.open();

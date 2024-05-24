@@ -27,6 +27,7 @@ import { peerIdFromPeerId, peerIdFromString } from "@libp2p/peer-id";
 import { PeerManager } from "./PeerManager";
 import ChatChannel from "./ChatChannel";
 import { base64ToFile, fileToBase64 } from "@/utils";
+import { mdns } from "@libp2p/mdns";
 const topics = [
   `webChatX._peer-discovery._p2p._pubsub`, // It's recommended but not required to extend the global space
   // "_peer-discovery._p2p._pubsub", // Include if you want to participate in the global space
@@ -247,6 +248,7 @@ export class Libp2pManager {
           topics: topics, // defaults to ['_peer-discovery._p2p._pubsub']
           listenOnly: false,
         }),
+        mdns(),
       ],
       services: {
         identify: identify(),
@@ -361,13 +363,20 @@ export class Libp2pManager {
             signal: AbortSignal.timeout(5000),
           }
         );
-        this.connectFriends();
-        this.subscribe();
         timeIntervalStart();
+        this.cyclicQuery();
       } catch (error) {
         reject(error);
       }
     });
+  }
+
+  cyclicQuery() {
+    this.connectFriends();
+    this.subscribe();
+    setInterval(() => {
+      console.log(this.libp2p);
+    }, 1000);
   }
 
   async subscribeChannel(
@@ -597,12 +606,18 @@ export class Libp2pManager {
         const remoteMessageObject = JSON.parse(
           remoteMessageString
         ) as ProtocolFriendSendMessage;
-        await this.databaseManager?.putMessage(
-          false,
-          this.chatUser?.value.id!,
-          remoteMessageObject.user.peerId,
-          remoteMessageObject.message
-        );
+        const isFriend = this.chatUser?.value.friendIds.find((friendId) => {
+          return friendId == remoteMessageObject.user.peerId;
+        });
+        if (isFriend) {
+          await this.databaseManager?.putMessage(
+            false,
+            this.chatUser?.value.id!,
+            remoteMessageObject.user.peerId,
+            remoteMessageObject.message
+          );
+        } else {
+        }
         await stream.close();
       });
       await this.libp2p.handle("/friend/sendFile", async ({ stream }) => {

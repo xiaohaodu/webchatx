@@ -130,7 +130,6 @@ async function friendRequest() {
         privateChatFormData.userId
       );
       const remotePeerId = peerIdFromString(remotePeerIdString);
-      // "/dns/webchatx.mayuan.work/tcp/10000/ws/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg/p2p-circuit/webrtc/p2p/"
       await libp2pManager.requestFriend(
         remotePeerId,
         privateChatFormData.validationMessage ||
@@ -139,7 +138,7 @@ async function friendRequest() {
       router.push({
         name: "PrivateChat",
         params: {
-          user_id: privateChatFormData.userId,
+          user_id: remotePeerIdString,
         },
       });
     } catch (error) {
