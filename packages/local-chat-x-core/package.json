@@ -1,17 +1,15 @@
 {
-  "name": "web-chat-x-express",
+  "name": "local-chat-x-core",
   "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "type": "module",
-  "author": "duxiaohao",
-  "description": "web-chat-x-express",
   "scripts": {
-    "dev": "nodemon ./src/main",
-    "build": "tsc && ncc build ./dist/main.js -o build && pnpm copy",
+    "dev": "nodemon ./index",
+    "build": "tsc && ncc build ./dist/index.js -o build && pnpm copy",
     "copy": "copyfiles ecosystem.config.cjs build",
     "tsc": "tsc"
   },
-  "keywords": [],
-  "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.18.3",
@@ -31,5 +29,8 @@
     "pm2": "^5.3.1",
     "supertest": "^6.3.4",
     "ts-node": "^10.9.2"
-  }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

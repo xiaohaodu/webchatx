@@ -18,13 +18,13 @@ export class PeerManager {
   public remotePeerId: Ref<string>;
   public remoteUser: Ref<ChatUserInfo> | undefined;
   constructor() {
-    this.nearPeer = ref<Peer | undefined>();
+    this.nearPeer = ref<Peer>();
     this.nearPeerId = ref("");
-    this.dataConnect = ref<DataConnection | undefined>();
-    this.mediaConnect = ref<MediaConnection | undefined>();
-    this.mediaStream = ref<MediaStream | undefined>();
-    this.nearVideoElement = ref<HTMLVideoElement | undefined>();
-    this.remoteVideoElement = ref<HTMLVideoElement | undefined>();
+    this.dataConnect = ref<DataConnection>();
+    this.mediaConnect = ref<MediaConnection>();
+    this.mediaStream = ref<MediaStream>();
+    this.nearVideoElement = ref<HTMLVideoElement>();
+    this.remoteVideoElement = ref<HTMLVideoElement>();
     this.elDialogVisible = ref(false);
     this.remotePeerId = ref("");
   }
@@ -70,56 +70,105 @@ export class PeerManager {
   // 处理来自其他对端的连接请求
   handleIncomingConnections = () => {
     this.nearPeer.value?.on("connection", (dataConnection) => {
+      this.dataConnect.value = dataConnection;
       dataConnection.on("data", async (data: any) => {
         console.log(`Received data:${data}`);
-        if (data.type == "call") {
-          this.mediaStream.value = await navigator.mediaDevices.getUserMedia({
-            video: data.video,
-            audio: data.audio,
-          });
-        }
       });
     });
   };
-  // 开始视频通话
   speakCall = async (video = true, audio = true) => {
     try {
       if (!(this.nearVideoElement.value && this.remoteVideoElement.value)) {
         throw new Error(
-          "Cannot answer the call without both video elements being defined"
+          "Both video elements must be defined to initiate a call"
         );
       }
-      this.mediaStream.value = await navigator.mediaDevices.getUserMedia({
-        video: video,
-        audio: audio,
-      });
-      this.nearVideoElement.value.srcObject = this.mediaStream.value;
-      await this.waitForVideoReady(this.nearVideoElement.value);
-      this.mediaConnect.value = this.nearPeer.value?.call(
-        this.remotePeerId.value,
-        this.mediaStream.value
+
+      // Step 1: Send call request through data channel
+      const callRequest = { type: "call_request", video, audio };
+      let responseReceived = false;
+
+      // Setup a listener for response on data channel
+      const onResponse = (event: any) => {
+        if (
+          event.data.type === "call_response" &&
+          event.data.from === this.remotePeerId.value
+        ) {
+          responseReceived = true;
+          this.dataConnect.value?.removeListener("data", onResponse); // Remove the listener once response is received
+          if (event.data.accepted) {
+            // Proceed with media setup
+            this.handleCallAccepted(video, audio);
+          } else {
+            console.log("Call request was declined.");
+            this.releaseMediaStream(); // Clean up if call is not accepted
+          }
+        }
+      };
+      this.dataConnect.value?.addListener("data", onResponse);
+
+      // Send the call request
+      await this.dataConnect.value?.send(callRequest);
+
+      // Optionally, add a timeout in case no response is received
+      const timeoutPromise = new Promise(
+        (_, reject) =>
+          setTimeout(() => reject(new Error("No response from peer")), 10000) // Timeout after 10 seconds
       );
-      this.dataConnect.value = this.nearPeer.value?.connect(
-        this.remotePeerId.value
-      );
-      setTimeout(async () => {
-        await this.dataConnect.value!.send({ type: "call", video, audio });
-      }, 1000);
-      this.mediaConnect.value &&
-        this.mediaConnect.value.on("stream", async (remoteStream) => {
-          this.remoteVideoElement.value!.srcObject = remoteStream;
-          await this.waitForVideoReady(this.remoteVideoElement.value!);
-          this.elDialogVisible.value = true;
-        });
-      this.mediaConnect.value!.on("close", this.releaseMediaStream);
+
+      // Wait for either a response or timeout
+      await Promise.race([
+        new Promise<void>((resolve) => responseReceived && resolve()),
+        timeoutPromise,
+      ]);
     } catch (error) {
-      console.error("Error starting call", error);
+      console.error("Error initiating call:", error);
+      this.releaseMediaStream();
+    }
+  };
+
+  handleCallAccepted = async (video: boolean, audio: boolean) => {
+    try {
+      this.mediaStream.value = await navigator.mediaDevices.getUserMedia({
+        video,
+        audio,
+      });
+      if (this.nearVideoElement.value) {
+        this.nearVideoElement.value.srcObject = this.mediaStream.value;
+        await this.waitForVideoReady(this.nearVideoElement.value);
+      } else {
+        ElMessage({
+          type: "error",
+          message: "video视频展示元素初始化失败,请刷新后重试",
+        });
+      }
+      // ... rest of the media connection setup ...
+    } catch (error) {
+      console.error("Error setting up media after acceptance:", error);
       this.releaseMediaStream();
     }
   };
   listenCall = () => {
     this.nearPeer.value?.on("call", async (call: MediaConnection) => {
       try {
+        // Hold the call object but don't answer yet; first send a request through data channel
+        this.mediaConnect.value = call;
+
+        // Simulate sending a call request via data channel (assuming dataConnect is already set up)
+        await this.dataConnect.value?.send({
+          type: "call_request",
+          from: this.nearPeerId.value,
+        });
+
+        // Wait for user response via UI prompt before proceeding
+        const userResponse = await this.showCallPrompt(call);
+        if (!userResponse.accepted) {
+          console.log("User declined the call.");
+          call.close(); // If the user declines, close the call connection
+          return;
+        }
+
+        // User accepted, now proceed with setting up media
         this.mediaConnect.value = call;
         await new Promise<void>((resolve) => {
           const callReady = () => {
@@ -134,6 +183,7 @@ export class PeerManager {
           };
           let timeout = setTimeout(callReady, 1000);
         });
+
         call.on("stream", async (remoteStream) => {
           if (this.nearVideoElement.value && this.remoteVideoElement.value) {
             if (this.nearVideoElement.value) {
@@ -147,16 +197,35 @@ export class PeerManager {
             this.elDialogVisible.value = true;
           } else {
             throw new Error(
-              "Cannot answer the call without both video elements being defined"
+              "Both video elements must be defined to answer the call"
             );
           }
         });
+
         call.on("close", this.releaseMediaStream);
       } catch (error) {
         console.error("Error answering call:", error);
         call.close();
         this.releaseMediaStream();
       }
+    });
+  };
+
+  // Hypothetical function to show a UI prompt for call acceptance and media preferences
+  showCallPrompt = async (call: MediaConnection) => {
+    return new Promise<{
+      accepted: boolean;
+      video: boolean;
+      audio: boolean;
+    }>((resolve) => {
+      // Implement your UI logic here to prompt the user for accepting the call and choosing media options
+      // For example, display a modal with "Accept" and "Decline" buttons and checkboxes for video/audio
+      // Once the user makes a choice, resolve the promise with an object like:
+      // { accepted: boolean, video: boolean, audio: boolean }
+      // Until implemented, assume a placeholder response for demonstration purposes:
+      setTimeout(() => {
+        resolve({ accepted: true, video: true, audio: true }); // Assume user accepts with video and audio
+      }, 1000);
     });
   };
   // 释放媒体流资源
