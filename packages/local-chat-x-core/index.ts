@@ -13,7 +13,7 @@ app.use(morgan("combined"));
 app.get("/test", (_req, res) => {
   res.send({
     type: "message",
-    message: "you testing the local-webchat-x-core http://127.0.0.1:6666",
+    message: "you testing the local-webchat-x-core http://127.0.0.1:" + port,
   });
 });
 
@@ -24,6 +24,6 @@ app.get("/libp2p", async (_req, res) => {
 
 app.listen(port, () => {
   console.log(
-    `local relay node running with prot ${port},http://127.0.0.1:6666`
+    `local relay node running with prot ${port},http://127.0.0.1:${port}`
   );
 });

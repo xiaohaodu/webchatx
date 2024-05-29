@@ -7,7 +7,7 @@ type PeerManagerOption = {
 };
 
 export class PeerManager {
-  public nearPeer: Ref<Peer | undefined>;
+  public nearPeer!: Peer;
   public nearPeerId: Ref<string>;
   public dataConnect: Ref<DataConnection | undefined>;
   public mediaConnect: Ref<MediaConnection | undefined>;
@@ -18,7 +18,6 @@ export class PeerManager {
   public remotePeerId: Ref<string>;
   public remoteUser: Ref<ChatUserInfo> | undefined;
   constructor() {
-    this.nearPeer = ref<Peer>();
     this.nearPeerId = ref("");
     this.dataConnect = ref<DataConnection>();
     this.mediaConnect = ref<MediaConnection>();
@@ -30,7 +29,7 @@ export class PeerManager {
   }
   createPeer = (option: PeerManagerOption) => {
     // 初始化PeerJS实例
-    this.nearPeer.value = new Peer(option.nearPeerId, {
+    this.nearPeer = new Peer(option.nearPeerId, {
       host: option.host || "webchatx.mayuan.work",
       port: option.port || 443,
       secure: true,
@@ -51,7 +50,7 @@ export class PeerManager {
     });
     this.nearPeerId.value = option.nearPeerId;
     // 监听本地peer ID生成事件
-    this.nearPeer.value?.on("open", async (id) => {
+    this.nearPeer.on("open", async (id) => {
       if (id == this.nearPeerId.value) {
         console.log(`Local peer ID: ${this.nearPeerId.value}`);
       } else {
@@ -69,7 +68,7 @@ export class PeerManager {
   };
   // 处理来自其他对端的连接请求
   handleIncomingConnections = () => {
-    this.nearPeer.value?.on("connection", (dataConnection) => {
+    this.nearPeer.on("connection", (dataConnection) => {
       this.dataConnect.value = dataConnection;
       dataConnection.on("data", async (data: any) => {
         console.log(`Received data:${data}`);
@@ -84,21 +83,20 @@ export class PeerManager {
         );
       }
 
-      // Step 1: Send call request through data channel
-      const callRequest = { type: "call_request", video, audio };
+      const callPreRequest = { type: "call_pre_request", video, audio };
       let responseReceived = false;
 
-      // Setup a listener for response on data channel
+      // 为数据通道上的响应设置侦听器
       const onResponse = (event: any) => {
         if (
-          event.data.type === "call_response" &&
+          event.data.type === "call_pre_response" &&
           event.data.from === this.remotePeerId.value
         ) {
           responseReceived = true;
           this.dataConnect.value?.removeListener("data", onResponse); // Remove the listener once response is received
           if (event.data.accepted) {
-            // Proceed with media setup
-            this.handleCallAccepted(video, audio);
+            // 继续进行媒体设置
+            this.callRequest(video, audio);
           } else {
             console.log("Call request was declined.");
             this.releaseMediaStream(); // Clean up if call is not accepted
@@ -107,16 +105,16 @@ export class PeerManager {
       };
       this.dataConnect.value?.addListener("data", onResponse);
 
-      // Send the call request
-      await this.dataConnect.value?.send(callRequest);
+      // 通过数据通道发送呼叫请求
+      await this.dataConnect.value?.send(callPreRequest);
 
-      // Optionally, add a timeout in case no response is received
+      // 可选地，在未收到响应的情况下添加超时
       const timeoutPromise = new Promise(
         (_, reject) =>
           setTimeout(() => reject(new Error("No response from peer")), 10000) // Timeout after 10 seconds
       );
 
-      // Wait for either a response or timeout
+      // 等待响应或超时
       await Promise.race([
         new Promise<void>((resolve) => responseReceived && resolve()),
         timeoutPromise,
@@ -127,7 +125,7 @@ export class PeerManager {
     }
   };
 
-  handleCallAccepted = async (video: boolean, audio: boolean) => {
+  callRequest = async (video: boolean, audio: boolean) => {
     try {
       this.mediaStream.value = await navigator.mediaDevices.getUserMedia({
         video,
@@ -142,47 +140,47 @@ export class PeerManager {
           message: "video视频展示元素初始化失败,请刷新后重试",
         });
       }
-      // ... rest of the media connection setup ...
+      this.mediaConnect.value = this.nearPeer.call(
+        this.remotePeerId.value,
+        this.mediaStream.value
+      );
+      this.mediaConnect.value.on("stream", async (remoteStream) => {
+        this.remoteVideoElement.value!.srcObject = remoteStream;
+        await this.waitForVideoReady(this.remoteVideoElement.value!);
+        this.elDialogVisible.value = true;
+      });
+      this.mediaConnect.value!.on("close", this.releaseMediaStream);
     } catch (error) {
       console.error("Error setting up media after acceptance:", error);
       this.releaseMediaStream();
     }
   };
   listenCall = () => {
-    this.nearPeer.value?.on("call", async (call: MediaConnection) => {
+    this.dataConnect.value?.on("data", async () => {
+      // 在继续之前等待用户通过UI提示的响应
+      const userResponse = await this.showCallPrompt();
+
+      // 通过数据通道发送呼叫请求
+      await this.dataConnect.value?.send({
+        type: "call_pre_response",
+        from: this.nearPeerId.value,
+        ...userResponse,
+      });
+      if (!userResponse.accepted) {
+        console.log("User declined the call.");
+        return;
+      }
+    });
+    this.nearPeer.on("call", async (call: MediaConnection) => {
       try {
-        // Hold the call object but don't answer yet; first send a request through data channel
+        // 阻塞通话对象但暂不接听；首先通过数据通道发送请求
         this.mediaConnect.value = call;
 
-        // Simulate sending a call request via data channel (assuming dataConnect is already set up)
-        await this.dataConnect.value?.send({
-          type: "call_request",
-          from: this.nearPeerId.value,
-        });
-
-        // Wait for user response via UI prompt before proceeding
-        const userResponse = await this.showCallPrompt(call);
-        if (!userResponse.accepted) {
-          console.log("User declined the call.");
-          call.close(); // If the user declines, close the call connection
-          return;
+        // 用户已接受，现在继续设置媒体
+        this.mediaConnect.value = call;
+        if (this.mediaStream.value) {
+          call.answer(this.mediaStream.value);
         }
-
-        // User accepted, now proceed with setting up media
-        this.mediaConnect.value = call;
-        await new Promise<void>((resolve) => {
-          const callReady = () => {
-            if (this.mediaStream.value) {
-              clearTimeout(timeout);
-              call.answer(this.mediaStream.value);
-              resolve();
-            } else {
-              clearTimeout(timeout);
-              timeout = setTimeout(callReady, 1000);
-            }
-          };
-          let timeout = setTimeout(callReady, 1000);
-        });
 
         call.on("stream", async (remoteStream) => {
           if (this.nearVideoElement.value && this.remoteVideoElement.value) {
@@ -211,20 +209,20 @@ export class PeerManager {
     });
   };
 
-  // Hypothetical function to show a UI prompt for call acceptance and media preferences
-  showCallPrompt = async (call: MediaConnection) => {
+  // 函数显示一个UI提示电话接受和媒体偏好
+  showCallPrompt = async () => {
     return new Promise<{
       accepted: boolean;
       video: boolean;
       audio: boolean;
     }>((resolve) => {
-      // Implement your UI logic here to prompt the user for accepting the call and choosing media options
-      // For example, display a modal with "Accept" and "Decline" buttons and checkboxes for video/audio
-      // Once the user makes a choice, resolve the promise with an object like:
-      // { accepted: boolean, video: boolean, audio: boolean }
-      // Until implemented, assume a placeholder response for demonstration purposes:
+      // 在此处实现 UI 逻辑以提示用户接受呼叫并选择媒体选项
+      // 显示带有“接受”和“拒绝”按钮以及视频/音频复选框​​的模式
+      // 一旦用户做出选择，就使用如下对象来解决承诺：
+      // { 接受：布尔值，视频：布尔值，音频：布尔值 }
+      // 在实施之前，一个占位符响应用于演示目的
       setTimeout(() => {
-        resolve({ accepted: true, video: true, audio: true }); // Assume user accepts with video and audio
+        resolve({ accepted: true, video: true, audio: true }); // 用户接受视频和音频
       }, 1000);
     });
   };

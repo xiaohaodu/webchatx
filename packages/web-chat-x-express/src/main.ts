@@ -1,6 +1,5 @@
 import express from "express";
-import { generatePeerServer } from "./controllers/peer.js";
-import { startRelayService } from "./controllers/libp2p.js";
+import PeerServerWrapper from "./controllers/peer.js";
 import cors from "cors";
 import morgan from "morgan";
 const app = express();
@@ -13,15 +12,13 @@ app.use(morgan("combined"));
 const server = app.listen(port, () => {
   console.log(`webrtc-peer-express app listen on http://localhost:${port}`);
 });
-// 启动 Relay 服务并配置启动和停止回调
-startRelayService({
-  onStarted: (listenMultiaddrArray) => {
-    console.log("Relay service started on:");
-    listenMultiaddrArray.forEach((addr) => {
-      console.log("-> ", addr.toString());
-    });
-  },
-  onStopped: () => console.log("Relay service stopped"),
-});
-const peerServer = generatePeerServer(server);
+
+import Libp2pManager from "./controllers/libp2p.js";
+const libp2pManager = new Libp2pManager();
+libp2pManager.startRelayService();
+
+// 直接在构造函数中初始化 Peer 服务器
+const peerServerWrapper = new PeerServerWrapper(server);
+// 然后你可以通过 getter 方法获取 Peer 服务器实例
+const peerServer = peerServerWrapper.getPeerServer();
 app.use("/peer", peerServer);

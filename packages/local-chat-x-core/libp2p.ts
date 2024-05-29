@@ -101,7 +101,7 @@ export default class Libp2pManager {
         }),
         pubsubPeerDiscovery({
           interval: 10000,
-          topics: topics, // defaults to ['_peer-discovery._p2p._pubsub']
+          topics: topics,
           listenOnly: false,
         }),
       ],
@@ -109,15 +109,15 @@ export default class Libp2pManager {
     });
   }
   private handleListenEvent() {
-    // this.libp2p.addEventListener("connection:open", (connection) => {
-    //   console.log("connection:open", connection.detail);
-    // });
-    // this.libp2p.addEventListener("connection:close", (connection) => {
-    //   console.log("connection:open", connection.detail);
-    // });
-    // this.libp2p.addEventListener("connection:prune", (connection) => {
-    //   console.log("connection:prune", connection.detail);
-    // });
+    this.libp2p.addEventListener("connection:open", (connection) => {
+      console.log("connection:open", connection.detail);
+    });
+    this.libp2p.addEventListener("connection:close", (connection) => {
+      console.log("connection:open", connection.detail);
+    });
+    this.libp2p.addEventListener("connection:prune", (connection) => {
+      console.log("connection:prune", connection.detail);
+    });
     this.libp2p.addEventListener("peer:connect", (peerId) => {
       console.log("peer:connect ", peerId.detail);
     });
@@ -128,40 +128,42 @@ export default class Libp2pManager {
       console.log("peer:discovery ", peerIdInfo.detail);
     });
 
-    // this.libp2p.addEventListener("peer:identify", (identifyResult) => {
-    //   console.log("peer:identify ", identifyResult.detail);
-    // });
-    // this.libp2p.addEventListener("peer:update", (peerUpdate) => {
-    //   console.log("peer:update ", peerUpdate.detail);
-    // });
-    // this.libp2p.addEventListener("self:peer:update", (peerUpdate) => {
-    //   console.log("self:peer:update ", peerUpdate.detail);
-    //   console.log("self:peer:update protocols", libp2p?.getProtocols());
-    //   console.log("self:peer:update multiaddrs", libp2p?.getMultiaddrs());
-    //   libp2p?.getMultiaddrs().forEach((multiaddr, index) => {
-    //     console.log(`self:peer:update multiaddr ${index} ${multiaddr.toString()}`);
-    //   });
-    //   console.log("self:peer:update dialQueue", libp2p?.getDialQueue());
-    //   console.log("self:peer:update connections", libp2p?.getConnections());
-    //   console.log("self:peer:update peers", libp2p?.getPeers());
-    // });
+    this.libp2p.addEventListener("peer:identify", (identifyResult) => {
+      console.log("peer:identify ", identifyResult.detail);
+    });
+    this.libp2p.addEventListener("peer:update", (peerUpdate) => {
+      console.log("peer:update ", peerUpdate.detail);
+    });
+    this.libp2p.addEventListener("self:peer:update", (peerUpdate) => {
+      console.log("self:peer:update ", peerUpdate.detail);
+      console.log("self:peer:update protocols", this.libp2p.getProtocols());
+      console.log("self:peer:update multiaddrs", this.libp2p.getMultiaddrs());
+      this.libp2p.getMultiaddrs().forEach((multiaddr, index) => {
+        console.log(
+          `self:peer:update multiaddr ${index} ${multiaddr.toString()}`
+        );
+      });
+      console.log("self:peer:update dialQueue", this.libp2p.getDialQueue());
+      console.log("self:peer:update connections", this.libp2p.getConnections());
+      console.log("self:peer:update peers", this.libp2p.getPeers());
+    });
     this.libp2p.addEventListener("start", () => {
       console.log("start");
-      // console.log("protocols", libp2p?.getProtocols());
-      // console.log("multiaddrs", libp2p?.getMultiaddrs());
-      // console.log("dialQueue", libp2p?.getDialQueue());
-      // console.log("connections", libp2p?.getConnections());
-      // console.log("peers", libp2p?.getPeers());
+      console.log("protocols", this.libp2p.getProtocols());
+      console.log("multiaddrs", this.libp2p.getMultiaddrs());
+      console.log("dialQueue", this.libp2p.getDialQueue());
+      console.log("connections", this.libp2p.getConnections());
+      console.log("peers", this.libp2p.getPeers());
     });
     this.libp2p.addEventListener("stop", () => {
       console.log("stop");
     });
-    // this.libp2p.addEventListener("transport:close", (listener) => {
-    //   console.log("transport:close", listener.detail);
-    // });
-    // this.libp2p.addEventListener("transport:listening", (listener) => {
-    //   console.log("transport:listening", listener.detail);
-    // });
+    this.libp2p.addEventListener("transport:close", (listener) => {
+      console.log("transport:close", listener.detail);
+    });
+    this.libp2p.addEventListener("transport:listening", (listener) => {
+      console.log("transport:listening", listener.detail);
+    });
   }
 
   private handleProtocol() {}
