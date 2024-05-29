@@ -30,7 +30,6 @@ import { base64ToFile, fileToBase64 } from "@/utils";
 import { dcutr } from "@libp2p/dcutr";
 const topics = [
   `webChatX._peer-discovery._p2p._pubsub`, // It's recommended but not required to extend the global space
-  // "_peer-discovery._p2p._pubsub", // Include if you want to participate in the global space
 ];
 export class Libp2pManager {
   private libp2p: Libp2p | undefined;

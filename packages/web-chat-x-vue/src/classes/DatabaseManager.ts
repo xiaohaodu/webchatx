@@ -20,7 +20,6 @@ import { exportDB, importDB } from "dexie-export-import";
 import Dexie, { PromiseExtended } from "dexie";
 import { isValidUserId } from "@/utils";
 export class DatabaseManager {
-  // 移除getInstance静态方法，直接在类构造函数中初始化数据库实例
   activatedUserDb!: ActivatedUserDb;
   publicDb!: PublicDb;
 
