@@ -8,15 +8,19 @@ import { webRTC } from "@libp2p/webrtc";
 import * as filters from "@libp2p/websockets/filters";
 import type { Multiaddr } from "@multiformats/multiaddr";
 import { identify } from "@libp2p/identify";
-import { KadDHT, kadDHT } from "@libp2p/kad-dht";
-import { peerIdFromKeys } from "@libp2p/peer-id";
-import { parsePrivateKeySecret } from "../utils/parseSecret.js";
+import {
+  KadDHT,
+  kadDHT,
+  removePrivateAddressesMapper,
+  removePublicAddressesMapper,
+} from "@libp2p/kad-dht";
+import { createEd25519PeerId } from "@libp2p/peer-id-factory";
 import { mdns } from "@libp2p/mdns";
 import { gossipsub } from "@chainsafe/libp2p-gossipsub";
-import { Server } from "https";
 import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
 import { tls } from "@libp2p/tls";
-import { bootstrap } from "@libp2p/bootstrap";
+import { prometheusMetrics } from "@libp2p/prometheus-metrics";
+// import { bootstrap } from "@libp2p/bootstrap";
 const topics = [
   `webChatX._peer-discovery._p2p._pubsub`, // It's recommended but not required to extend the global space
 ];
@@ -32,14 +36,12 @@ type RelayServiceOptions = {
  * 启动 Relay 服务的异步函数。接受可选的 RelayServiceOptions 参数以配置启动和停止回调。
  * */
 async function startRelayService(
-  options?: RelayServiceOptions,
-  server?: Server
-): Promise<void> {
+  options?: RelayServiceOptions
+): Promise<Libp2p | void> {
   let libp2p: Libp2p | undefined;
-
   try {
     // 创建并初始化 Relay 节点
-    libp2p = await createRelayNode(server);
+    libp2p = await createRelayNode();
     (libp2p.services.dht as KadDHT).setMode("server");
     // 获取 Relay 节点的监听地址，并确保找到一个 IPv4 地址
     const listenMultiaddr = libp2p.getMultiaddrs();
@@ -47,6 +49,7 @@ async function startRelayService(
     if (options?.onStarted) {
       options.onStarted(listenMultiaddr);
     }
+    return libp2p;
   } catch (error) {
     // 如果启动过程中发生错误，打印错误信息并尝试停止已创建的 Relay 节点
     console.error("Failed to start relay service:", error);
@@ -60,19 +63,18 @@ async function startRelayService(
 /**
  * 创建一个用于充当 Relay 节点的 Libp2p 实例。返回一个 Promise<Libp2p>。
  */
-async function createRelayNode(_server?: Server): Promise<Libp2p> {
+async function createRelayNode(): Promise<Libp2p> {
   // 配置 Libp2p 参数，包括：
   //   - 监听地址：设置为任意 IPv4 地址上的 WebSocket 连接
   //   - 传输层：使用 WebSocket 传输，应用所有可用过滤器
   //   - 连接加密：使用 Noise 加密方案
   //   - 流复用：使用 Yamux 流复用协议
   //   - 服务：启用 Circuit Relay Server（中继服务）
-  const keyPair = await parsePrivateKeySecret();
-  const peerId = await peerIdFromKeys(keyPair.public.bytes, keyPair.bytes);
+  const peerId = await createEd25519PeerId();
   return await createLibp2p({
     addresses: {
       listen: [
-        "/ip4/127.0.0.1/tcp/9000/wss",
+        "/ip4/127.0.0.1/tcp/9000/ws",
         "/ip4/127.0.0.1/tcp/10000/ws",
         "/webrtc",
       ], // 替换为实际希望监听的 IP 和端口
@@ -101,6 +103,7 @@ async function createRelayNode(_server?: Server): Promise<Libp2p> {
     ],
     connectionEncryption: [noise(), tls()],
     streamMuxers: [yamux()],
+    metrics: prometheusMetrics(),
     services: {
       identify: identify(),
       relay: circuitRelayServer({
@@ -110,19 +113,22 @@ async function createRelayNode(_server?: Server): Promise<Libp2p> {
         kBucketSize: 20,
         clientMode: false,
       }),
+      aminoDHT: kadDHT({
+        protocol: "/ipfs/kad/1.0.0",
+        peerInfoMapper: removePrivateAddressesMapper,
+      }),
+      lanDHT: kadDHT({
+        protocol: "/ipfs/lan/kad/1.0.0",
+        peerInfoMapper: removePublicAddressesMapper,
+        clientMode: false,
+      }),
       pubsub: gossipsub(),
     },
     peerDiscovery: [
       mdns(),
-      bootstrap({
-        list: [
-          "/ip4/104.131.131.82/tcp/4001/ipfs/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ",
-          "/dnsaddr/bootstrap.libp2p.io/ipfs/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-          "/dnsaddr/bootstrap.libp2p.io/ipfs/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-          "/dns/webchatx.mayuan.work/tcp/10000/ws/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg",
-          "/dns/webchatx.mayuan.work/tcp/9000/wss/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg",
-        ],
-      }),
+      // bootstrap({
+      //   list: [],
+      // }),
       pubsubPeerDiscovery({
         interval: 10000,
         topics: topics, // defaults to ['_peer-discovery._p2p._pubsub']

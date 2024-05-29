@@ -2,7 +2,6 @@
   "name": "local-chat-x-core",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "type": "module",
   "scripts": {
     "dev": "nodemon ./index",
@@ -23,12 +22,7 @@
     "@types/express": "^4.17.21",
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.11.25",
-    "@types/sshpk": "^1.17.4",
-    "@vercel/ncc": "^0.38.1",
-    "nodemon": "^3.1.0",
-    "pm2": "^5.3.1",
-    "supertest": "^6.3.4",
-    "ts-node": "^10.9.2"
+    "@types/sshpk": "^1.17.4"
   },
   "keywords": [],
   "author": "",
