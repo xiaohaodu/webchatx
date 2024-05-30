@@ -1,4 +1,4 @@
-name: deploy web-chat-x-express libp2p stun server
+name: deploy web-chat-x-express libp2p
 on:
   workflow_dispatch:
   push:

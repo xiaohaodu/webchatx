@@ -29,6 +29,7 @@ import ChatChannel from "./ChatChannel";
 import { base64ToFile, fileToBase64 } from "@/utils";
 import { dcutr } from "@libp2p/dcutr";
 import { bootstrap } from "@libp2p/bootstrap";
+import { Peer } from "@libp2p/interface";
 const topics = [
   `webChatX._peer-discovery._p2p._pubsub`, // It's recommended but not required to extend the global space
 ];
@@ -158,25 +159,28 @@ export class Libp2pManager {
     });
   }
 
-  getLibp2pKadDHTDiscovery() {
-    const libp2pKadDHTDiscovery = fetch("http://127.0.0.1:6666");
-    libp2pKadDHTDiscovery
-      .then(async (peerStore) => {
-        console.log(peerStore);
-        await new Promise<void>((resolve) => {
-          setTimeout(() => {
-            resolve();
-            this.getLibp2pKadDHTDiscovery();
-          }, 2000);
-        });
-      })
-      .catch((error) => {
-        ElMessage({
-          type: "error",
-          message: "本地节点获取节点发现失败",
-        });
-        console.log("error getLibp2pKadDHTDiscovery", error);
+  async getLibp2pKadDHTDiscovery() {
+    try {
+      const libp2pKadDHTDiscovery = await fetch("http://127.0.0.1:8000/libp2p");
+      const peerHasDiscoveryStore =
+        (await libp2pKadDHTDiscovery.json()) as Peer[];
+      console.log(peerHasDiscoveryStore);
+      peerHasDiscoveryStore.forEach((peer) => {
+        this.libp2p.dialProtocol(
+          peer.addresses.map((add) => add.multiaddr),
+          this.libp2p.getProtocols()
+        );
       });
+      setTimeout(() => {
+        this.getLibp2pKadDHTDiscovery();
+      }, 2000);
+    } catch (error) {
+      ElMessage({
+        type: "error",
+        message: "本地节点获取节点发现失败",
+      });
+      console.log("error getLibp2pKadDHTDiscovery", error);
+    }
   }
 
   handleListenEvent() {

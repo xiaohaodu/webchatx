@@ -182,7 +182,7 @@ export default class Libp2pManager {
     }
   }
   /**
-   * 启动 Relay 服务的异步函数。接受可选的 RelayServiceOptions 参数以配置启动和停止回调。
+   * 启动 Relay 服务的异步函数。
    * */
   public async startRelayService(): Promise<Libp2p | void> {
     try {

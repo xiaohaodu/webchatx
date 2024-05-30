@@ -1,6 +1,7 @@
 import express from "express";
+import cors from "cors";
 const app = express();
-const port = 6666;
+const port = 8000;
 
 import Libp2pManager from "./libp2p.js";
 const libp2pManager = new Libp2pManager();
@@ -9,6 +10,7 @@ libp2pManager.startRelayService();
 import morgan from "morgan";
 
 app.use(morgan("combined"));
+app.use(cors());
 
 app.get("/test", (_req, res) => {
   res.send({
