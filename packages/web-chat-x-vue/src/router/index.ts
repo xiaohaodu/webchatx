@@ -17,54 +17,54 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/Login.vue"),
     meta: { requiresAuth: false },
   },
-  {
-    path: "/test",
-    name: "Test",
-    component: () => import("@/views/Test.vue"),
-    meta: { requiresAuth: false },
-    redirect: { name: "TestDeixe" },
-    children: [
-      {
-        path: "deixe",
-        name: "TestDeixe",
-        component: () =>
-          import("@/components/TestComponents/TestDexieComponent.vue"),
-      },
-      {
-        path: "emoji",
-        name: "TestEmoji",
-        component: () =>
-          import("@/components/TestComponents/TestEmojiComponent.vue"),
-      },
-      {
-        path: "peer_video",
-        name: "TestPeerVideo",
-        component: () =>
-          import("@/components/TestComponents/TestPeerVideoComponent.vue"),
-      },
-      {
-        path: "blob",
-        name: "TestBlob",
-        component: () =>
-          import("@/components/TestComponents/TestBlobComponent.vue"),
-      },
-    ],
-  },
-  {
-    path: "/overdue",
-    name: "Overdue",
-    component: () => import("@/views/Test.vue"),
-    meta: { requiresAuth: false },
-    redirect: { name: "OverdueVideo" },
-    children: [
-      {
-        path: "video",
-        name: "OverdueVideo",
-        component: () =>
-          import("@/components/OverdueComponents/OverdueVideoComponent.vue"),
-      },
-    ],
-  },
+  // {
+  //   path: "/test",
+  //   name: "Test",
+  //   component: () => import("@/views/Test.vue"),
+  //   meta: { requiresAuth: false },
+  //   redirect: { name: "TestDeixe" },
+  //   children: [
+  //     {
+  //       path: "deixe",
+  //       name: "TestDeixe",
+  //       component: () =>
+  //         import("@/components/TestComponents/TestDexieComponent.vue"),
+  //     },
+  //     {
+  //       path: "emoji",
+  //       name: "TestEmoji",
+  //       component: () =>
+  //         import("@/components/TestComponents/TestEmojiComponent.vue"),
+  //     },
+  //     {
+  //       path: "peer_video",
+  //       name: "TestPeerVideo",
+  //       component: () =>
+  //         import("@/components/TestComponents/TestPeerVideoComponent.vue"),
+  //     },
+  //     {
+  //       path: "blob",
+  //       name: "TestBlob",
+  //       component: () =>
+  //         import("@/components/TestComponents/TestBlobComponent.vue"),
+  //     },
+  //   ],
+  // },
+  // {
+  //   path: "/overdue",
+  //   name: "Overdue",
+  //   component: () => import("@/views/Test.vue"),
+  //   meta: { requiresAuth: false },
+  //   redirect: { name: "OverdueVideo" },
+  //   children: [
+  //     {
+  //       path: "video",
+  //       name: "OverdueVideo",
+  //       component: () =>
+  //         import("@/components/OverdueComponents/OverdueVideoComponent.vue"),
+  //     },
+  //   ],
+  // },
   {
     path: "/",
     component: () => import("@/layouts/DefaultLayout.vue"),
@@ -180,12 +180,14 @@ router.beforeEach(
               }
               //启动libp2p节点
               await libp2pManager.startLibp2pNode();
+              console.log("55555555555555555");
               libp2pManager.setChatUser(currentUser);
             }
             // 代码运行到这里肯定database和libp2p都已经正常启用了，那么可以启动peer了
             peerManager.createPeer({
               nearPeerId: currentUser.id,
             });
+
             next(); // 用户已登录，允许访问
           } else {
             // 登录用户数据库被消除，清除当前用户信息

@@ -135,6 +135,7 @@ export class Libp2pManager {
         timeInterval = setTimeout(() => {
           const multiaddrs = this.libp2p!.getMultiaddrs();
           if (multiaddrs.length) {
+            console.log(1000);
             clearInterval(timeInterval);
             resolve();
           } else {
@@ -150,7 +151,7 @@ export class Libp2pManager {
       }
       try {
         timeIntervalStart();
-        this.handleListenEvent();
+        // this.handleListenEvent();
         this.cyclicQuery();
         this.getLibp2pKadDHTDiscovery();
       } catch (error) {
@@ -173,7 +174,7 @@ export class Libp2pManager {
       });
       setTimeout(() => {
         this.getLibp2pKadDHTDiscovery();
-      }, 2000);
+      }, 10000);
     } catch (error) {
       ElMessage({
         type: "error",
@@ -419,9 +420,9 @@ export class Libp2pManager {
         await this.libp2p?.peerStore.all()
       );
       clearTimeout(timer);
-      timer = setTimeout(fn, 1000);
+      timer = setTimeout(fn, 10000);
     };
-    let timer: NodeJS.Timeout = setTimeout(fn, 1000);
+    let timer: NodeJS.Timeout = setTimeout(fn, 10000);
   }
 
   async subscribeChannel(

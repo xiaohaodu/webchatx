@@ -41,8 +41,8 @@ export default class Libp2pManager {
     return await createLibp2p({
       addresses: {
         listen: [
-          "/ip4/127.0.0.1/tcp/9000/ws",
-          "/ip4/127.0.0.1/tcp/10000/wss",
+          "/ip4/127.0.0.1/tcp/9000/wss",
+          "/ip4/127.0.0.1/tcp/10000/ws",
           "/webrtc",
         ], // 替换为实际希望监听的 IP 和端口
       },
