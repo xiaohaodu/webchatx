@@ -4,7 +4,6 @@ import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { circuitRelayServer } from "@libp2p/circuit-relay-v2";
 import { webSockets } from "@libp2p/websockets";
-import { webRTC } from "@libp2p/webrtc";
 import * as filters from "@libp2p/websockets/filters";
 import { identify } from "@libp2p/identify";
 import {
@@ -50,23 +49,6 @@ export default class Libp2pManager {
       transports: [
         webSockets({
           filter: filters.all,
-        }),
-        webRTC({
-          rtcConfiguration: {
-            iceServers: [
-              {
-                urls: "stun:stun.l.google.com:19302",
-              },
-              {
-                urls: "stun:global.stun.twilio.com:3478",
-              },
-              {
-                urls: "turn:webchatx.stun.mayuan.work:3478",
-                username: "dxh",
-                credential: "187139",
-              },
-            ],
-          },
         }),
       ],
       connectionEncryption: [noise(), tls()],
