@@ -45,9 +45,9 @@ export class Libp2pManager {
     multiaddr(
       "/dns/webchatx.mayuan.work/tcp/9000/wss/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg"
     ),
-    // multiaddr(
-    //   "/dns/webchatx.mayuan.work/tcp/10000/ws/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg"
-    // ),
+    multiaddr(
+      "/dns/webchatx.mayuan.work/tcp/10000/ws/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg"
+    ),
   ];
   public databaseManager: DatabaseManager | undefined;
   public peerManager: PeerManager | undefined;
@@ -150,7 +150,7 @@ export class Libp2pManager {
       }
       try {
         timeIntervalStart();
-        // this.handleListenEvent();
+        this.handleListenEvent();
         this.cyclicQuery();
         // this.getLibp2pKadDHTDiscovery();
       } catch (error) {
@@ -327,13 +327,13 @@ export class Libp2pManager {
   async setChatUser(chatUser: ChatUser) {
     this.chatUser = ref(chatUser);
     this.friends = ref(
-      (await this.databaseManager?.activatedUserDb.friends.toArray())!
+      (await this.databaseManager?.activatedUserDb.friends.toArray())! || []
     );
     this.channels = ref(
-      (await this.databaseManager?.activatedUserDb.channels.toArray())!
+      (await this.databaseManager?.activatedUserDb.channels.toArray())! || []
     );
     this.subscribers = ref(
-      (await this.databaseManager?.activatedUserDb.subscribers.toArray())!
+      (await this.databaseManager?.activatedUserDb.subscribers.toArray())! || []
     );
   }
 
@@ -391,9 +391,10 @@ export class Libp2pManager {
         cloneDeep(channel),
         cloneDeep(subscriber)
       );
+      this.subscribers!.value = (await this.databaseManager?.getSubscribers())!;
     }
-    this.channels!.value =
-      (await this.databaseManager?.activatedUserDb.channels.toArray())!;
+    // this.channels!.value =
+    //   (await this.databaseManager?.activatedUserDb.channels.toArray())!;
   }
 
   getChatUser() {
@@ -499,7 +500,7 @@ export class Libp2pManager {
         setTimeout(() => {
           this.subscribe();
           resolve();
-        }, 2000);
+        }, 5000);
       });
     });
   };
@@ -560,14 +561,13 @@ export class Libp2pManager {
         setTimeout(() => {
           this.connectFriends();
           resolve();
-        }, 1000);
+        }, 5000);
       });
     });
   }
 
   async libp2pHandleExpand() {
     if (this.libp2p) {
-      // 读取数据示例
       await this.libp2p.handle("/friends/add", async ({ stream }) => {
         let remoteMessageString = "";
         for await (const buf of stream.source) {
@@ -576,7 +576,6 @@ export class Libp2pManager {
         const remoteMessageObject = JSON.parse(
           remoteMessageString
         ) as ProtocolFriendAdd;
-        // 写入数据示例
         await stream.sink([
           Uint8Array.from(
             this.textEncoder.encode(
@@ -639,7 +638,6 @@ export class Libp2pManager {
           this.databaseManager?.putMessageAggregation(messageAggregation),
         ]);
         console.log("add friend", remoteMessageObject, friend);
-
         // 记得正确关闭或处理流的结束
         await stream.close();
       });
@@ -698,14 +696,12 @@ export class Libp2pManager {
           console.log(topic, event_.detail);
         } else {
           const signedMessage = event_.detail as SignedMessage;
-
           for (const channel of this.channels?.value!) {
             console.log(signedMessage, channel);
             if (`${channel.name}@${channel.id}` === topic) {
               const pubsubSendMessage = JSON.parse(
                 this.textDecoder.decode(signedMessage.data)
               ) as PubSubSendMessage;
-              console.log(topic, pubsubSendMessage, signedMessage);
               const channelSubscribe = await ChatUser.create(
                 pubsubSendMessage.user.name,
                 pubsubSendMessage.user.description,
@@ -721,7 +717,7 @@ export class Libp2pManager {
               channelSubscribe.role = pubsubSendMessage.user.role;
               channelSubscribe.email = pubsubSendMessage.user.email;
               channelSubscribe.phone = pubsubSendMessage.user.phone;
-              this.addChannelSubscriber(false, channel, channelSubscribe);
+              await this.addChannelSubscriber(false, channel, channelSubscribe);
               await this.databaseManager?.putMessage(
                 false,
                 this.chatUser?.value.id!,
@@ -729,7 +725,6 @@ export class Libp2pManager {
                 pubsubSendMessage.message,
                 channel.id
               );
-              return;
             }
           }
         }

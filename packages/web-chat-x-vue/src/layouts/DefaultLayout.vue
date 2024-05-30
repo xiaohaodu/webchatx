@@ -37,6 +37,7 @@
         <el-sub-menu index="/private_chat">
           <template #title>私聊</template>
           <el-menu-item
+            v-show="reload"
             v-for="friend in friends"
             :index="`/private_chat/${friend.id}`"
           >
@@ -72,23 +73,42 @@
 </template>
 
 <script setup lang="ts">
+import ChatChannel from "@/classes/ChatChannel";
+import ChatUser from "@/classes/ChatUser";
 import useLibp2p from "@/hooks/useLibp2p";
 import { useRouter } from "vue-router";
 
 const { libp2pManager } = useLibp2p();
-// const chatUser = libp2pManager.getChatUser();
-const friends = libp2pManager.getFriends();
-const channels = libp2pManager.getChannels();
+const friends = libp2pManager.getFriends() as Ref<ChatUser[]>;
+const channels = libp2pManager.getChannels() as Ref<ChatChannel[]>;
 // 添加处理菜单选中的方法
 const handleMenuSelect = (index: string) => {
   console.log(`selected menu item: ${index}`);
 };
 const activeMenu = ref<string>();
 const router = useRouter();
-onMounted(() => {
+watchEffect(() => {
   activeMenu.value =
     (router.currentRoute.value.meta.activeMenu as string | undefined) ||
     router.currentRoute.value.fullPath;
+});
+const reload = ref(true);
+let timeout: NodeJS.Timeout;
+const intervalFriends = () => {
+  timeout = setTimeout(() => {
+    clearTimeout(timeout);
+    reload.value = false;
+    nextTick(() => {
+      reload.value = true;
+    });
+    intervalFriends();
+  }, 5000);
+};
+onMounted(() => {
+  intervalFriends();
+});
+onUnmounted(() => {
+  clearTimeout(timeout);
 });
 </script>
 <style lang="scss" scoped>

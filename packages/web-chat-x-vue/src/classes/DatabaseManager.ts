@@ -78,6 +78,9 @@ export class DatabaseManager {
   getSubscriber = async (id: string) => {
     return (await this.activatedUserDb.subscribers.get(id))!;
   };
+  getSubscribers = async () => {
+    return (await this.activatedUserDb.subscribers.toArray())!;
+  };
   putSubscriber = async (channel: ChatChannel, subscriber: ChatUser) => {
     await Promise.all([
       this.activatedUserDb.subscribers.put(subscriber),

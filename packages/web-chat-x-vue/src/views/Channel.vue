@@ -179,7 +179,6 @@ async function isOnlineProxy(handle:Function|(()=>{})){
       message:`${channel.value.name}@${channel.value.id.slice(8)}...聊天室暂时没有其他人，等等再来继续聊天吧！`    })
   }
 }
-
 // const elUploadButtonRef = ref() as Ref<HTMLButtonElement>; // 创建ElUpload的引用
 // const elUploadRef=ref() as Ref<InstanceType<typeof ElUpload>>
 // async function sendFile(){
