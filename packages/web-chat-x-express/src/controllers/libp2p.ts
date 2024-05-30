@@ -12,7 +12,8 @@ import {
   removePrivateAddressesMapper,
   removePublicAddressesMapper,
 } from "@libp2p/kad-dht";
-import { createEd25519PeerId } from "@libp2p/peer-id-factory";
+import { peerIdFromKeys } from "@libp2p/peer-id";
+import { parsePrivateKeySecret } from "../utils/parseSecret.js";
 import { mdns } from "@libp2p/mdns";
 import { gossipsub } from "@chainsafe/libp2p-gossipsub";
 import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
@@ -37,7 +38,8 @@ export default class Libp2pManager {
     //   - 连接加密：使用 Noise 加密方案
     //   - 流复用：使用 Yamux 流复用协议
     //   - 服务：启用 Circuit Relay Server（中继服务）
-    const peerId = await createEd25519PeerId();
+    const keyPair = await parsePrivateKeySecret();
+    const peerId = await peerIdFromKeys(keyPair.public.bytes, keyPair.bytes);
     return await createLibp2p({
       addresses: {
         listen: [
@@ -81,8 +83,6 @@ export default class Libp2pManager {
             "/ip4/104.131.131.82/tcp/4001/ipfs/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ",
             "/dnsaddr/bootstrap.libp2p.io/ipfs/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
             "/dnsaddr/bootstrap.libp2p.io/ipfs/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-            "/dns/webchatx.mayuan.work/tcp/10000/ws/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg",
-            "/dns/webchatx.mayuan.work/tcp/9000/wss/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg",
           ],
         }),
         pubsubPeerDiscovery({
@@ -169,12 +169,12 @@ export default class Libp2pManager {
   public async startRelayService(): Promise<Libp2p | void> {
     try {
       // 创建并初始化 Relay 节点
+
       this.libp2p = await this.createRelayNode();
       (this.libp2p.services.dht as KadDHT).setMode("server");
       // 获取 Relay 节点的监听地址，并确保找到一个 IPv4 地址
       const listenMultiaddr = this.libp2p.getMultiaddrs();
-      // 如果提供了 onStarted 回调，则在服务启动后调用它，传入监听地址
-      this.handleListenEvent();
+      false && this.handleListenEvent();
       this.handleProtocol();
       console.log("Relay service started on:");
       listenMultiaddr.forEach((addr) => {

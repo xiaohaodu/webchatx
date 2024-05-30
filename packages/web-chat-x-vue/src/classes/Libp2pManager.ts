@@ -45,9 +45,9 @@ export class Libp2pManager {
     multiaddr(
       "/dns/webchatx.mayuan.work/tcp/9000/wss/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg"
     ),
-    multiaddr(
-      "/dns/webchatx.mayuan.work/tcp/10000/ws/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg"
-    ),
+    // multiaddr(
+    //   "/dns/webchatx.mayuan.work/tcp/10000/ws/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg"
+    // ),
   ];
   public databaseManager: DatabaseManager | undefined;
   public peerManager: PeerManager | undefined;
@@ -135,7 +135,6 @@ export class Libp2pManager {
         timeInterval = setTimeout(() => {
           const multiaddrs = this.libp2p!.getMultiaddrs();
           if (multiaddrs.length) {
-            console.log(1000);
             clearInterval(timeInterval);
             resolve();
           } else {
@@ -153,7 +152,7 @@ export class Libp2pManager {
         timeIntervalStart();
         // this.handleListenEvent();
         this.cyclicQuery();
-        this.getLibp2pKadDHTDiscovery();
+        // this.getLibp2pKadDHTDiscovery();
       } catch (error) {
         reject(error);
       }
