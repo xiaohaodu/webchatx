@@ -23,9 +23,9 @@
             <span class="icon-[dashicons--exit]"></span>退出登录</el-button
           >
         </el-form-item>
-        <!-- <el-form-item>
-          <el-button type="primary" @click="save()">保存</el-button>
-        </el-form-item> -->
+        <el-form-item label="连接本地全功能节点">
+          <el-switch v-model="enableLocalNode"></el-switch>
+        </el-form-item>
       </el-form>
     </el-card>
     <a ref="refA" v-show="false"></a>
@@ -39,6 +39,12 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 // import { multiaddr } from "@multiformats/multiaddr";
 const { databaseManager } = useDexie();
+const { libp2pManager } = useLibp2p();
+const enableLocalNode = ref(libp2pManager.enableLocalNode);
+watchEffect(() => {
+  libp2pManager.enableLocalNode = enableLocalNode.value;
+});
+
 // const user = ref(
 //   (await databaseManager.activatedUserDb.info.limit(1).first())!
 // );

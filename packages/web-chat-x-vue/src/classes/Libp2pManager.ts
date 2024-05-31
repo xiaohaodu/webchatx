@@ -153,7 +153,7 @@ export class Libp2pManager {
         timeIntervalStart();
         this.handleListenEvent();
         this.cyclicQuery();
-        // this.getLibp2pKadDHTDiscovery();
+        this.getLibp2pKadDHTDiscovery();
       } catch (error) {
         reject(error);
       }
@@ -162,6 +162,9 @@ export class Libp2pManager {
   getLibp2pKadDHTDiscoveryTime?: NodeJS.Timeout;
   getLibp2pKadDHTDiscovery = async () => {
     if (!this.enableLocalNode) {
+      this.getLibp2pKadDHTDiscoveryTime = setTimeout(() => {
+        this.getLibp2pKadDHTDiscovery();
+      }, 10000);
       return;
     }
     try {
@@ -181,7 +184,9 @@ export class Libp2pManager {
     } catch (error) {
       ElMessage({
         type: "error",
-        message: "连接本地全功能节点失败，请启动本地节点",
+        message:
+          "连接本地全功能节点失败，请启动本地节点，否则请在设置->高级中取消连接功能或刷新应用重置状态",
+        center: true,
       });
       console.log("error getLibp2pKadDHTDiscovery", error);
     }
