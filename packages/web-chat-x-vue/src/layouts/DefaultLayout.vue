@@ -61,7 +61,7 @@
 
     <el-container>
       <el-header class="flex items-center">
-        <h2 class="text-xl font-bold">实时通讯</h2>
+        <h2 class="text-xl font-bold">WebChatX</h2>
       </el-header>
       <el-divider></el-divider>
       <el-main>
