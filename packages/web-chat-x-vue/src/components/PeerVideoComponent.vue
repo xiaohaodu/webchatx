@@ -104,8 +104,9 @@ peerManager.nearVideoElement = nearVideoElement;
 peerManager.elDialogVisible = elDialogVisible;
 
 onMounted(() => {
-  elDialogVisible.value = false;
+  elDialogVisible.value = true;
   nextTick(() => {
+    elDialogVisible.value = false;
     peerManager.listenCall();
   });
 });
