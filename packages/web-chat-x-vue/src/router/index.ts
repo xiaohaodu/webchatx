@@ -161,10 +161,6 @@ router.beforeEach(
       // 如果有登录用户（public用户数据库控制）
       if (currentUser) {
         if (databaseManager.activatedUserDb) {
-          // 代码运行到这里肯定database和libp2p都已经正常启用了，那么可以启动peer了
-          peerManager.createPeer({
-            nearPeerId: currentUser.id,
-          });
           next();
         } else {
           const dbs = await indexedDB.databases();
@@ -186,10 +182,6 @@ router.beforeEach(
               await libp2pManager.startLibp2pNode();
               libp2pManager.setChatUser(currentUser);
             }
-            // 代码运行到这里肯定database和libp2p都已经正常启用了，那么可以启动peer了
-            peerManager.createPeer({
-              nearPeerId: currentUser.id,
-            });
             next(); // 用户已登录，允许访问
           } else {
             // 登录用户数据库被消除，清除当前用户信息

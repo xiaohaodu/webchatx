@@ -59,7 +59,27 @@
 
       <template #footer>
         <div class="flex items-center justify-center">
-          <el-button type="danger" @click="hungUp">挂断</el-button>
+          <el-button
+            v-show="!communication.call && communication.await"
+            type="primary"
+            @click="accept"
+            >接听</el-button
+          >
+          <el-button
+            v-show="!communication.call && communication.await"
+            type="danger"
+            @click="reject"
+            >拒绝</el-button
+          >
+          <el-button
+            v-show="
+              communication.call ||
+              (!communication.call && !communication.await)
+            "
+            type="danger"
+            @click="hungUp"
+            >挂断</el-button
+          >
         </div>
       </template>
     </el-dialog>
@@ -67,14 +87,22 @@
 </template>
 
 <script lang="ts" setup>
+import useLibp2p from "@/hooks/useLibp2p";
 import usePeer from "@/hooks/usePeer";
 const { peerManager } = usePeer();
+const { libp2pManager } = useLibp2p();
+const currentUser = libp2pManager.getChatUser();
+peerManager.createPeer({
+  nearPeerId: currentUser.value.id,
+});
 const elDialogVisible = ref(true);
 const remoteVideoElement = ref() as Ref<HTMLVideoElement>;
 const nearVideoElement = ref() as Ref<HTMLVideoElement>;
+const communication = peerManager.communication;
 peerManager.remoteVideoElement = remoteVideoElement;
 peerManager.nearVideoElement = nearVideoElement;
 peerManager.elDialogVisible = elDialogVisible;
+
 onMounted(() => {
   elDialogVisible.value = false;
   nextTick(() => {
@@ -88,6 +116,17 @@ onUnmounted(() => {
 function hungUp() {
   elDialogVisible.value = false;
   peerManager.mediaConnect.value!.close();
+}
+
+function reject() {
+  communication.value.await = false;
+  communication.value.accepted = false;
+  elDialogVisible.value = false;
+}
+
+function accept() {
+  communication.value.await = false;
+  communication.value.accepted = true;
 }
 </script>
 <style lang="scss">

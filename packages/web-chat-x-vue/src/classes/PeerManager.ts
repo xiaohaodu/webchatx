@@ -14,9 +14,16 @@ export class PeerManager {
   public mediaStream: Ref<MediaStream | undefined>;
   public nearVideoElement: Ref<HTMLVideoElement | undefined>;
   public remoteVideoElement: Ref<HTMLVideoElement | undefined>;
-  public elDialogVisible: Ref<boolean>;
   public remotePeerId: Ref<string>;
   public remoteUser: Ref<ChatUserInfo> | undefined;
+  public elDialogVisible: Ref<boolean>;
+  public communication: Ref<{
+    await: boolean;
+    call: boolean;
+    accepted: boolean;
+    video: boolean;
+    audio: boolean;
+  }>;
   constructor() {
     this.nearPeerId = ref("");
     this.dataConnect = ref<DataConnection>();
@@ -26,6 +33,13 @@ export class PeerManager {
     this.remoteVideoElement = ref<HTMLVideoElement>();
     this.elDialogVisible = ref(false);
     this.remotePeerId = ref("");
+    this.communication = ref({
+      await: true,
+      call: false,
+      accepted: false,
+      video: false,
+      audio: false,
+    });
   }
   createPeer = (option: PeerManagerOption) => {
     // 初始化PeerJS实例
@@ -70,7 +84,7 @@ export class PeerManager {
   handleIncomingConnections = () => {
     this.nearPeer.on("connection", (dataConnection) => {
       this.dataConnect.value = dataConnection;
-      dataConnection.on("data", async (data: any) => {
+      dataConnection.on("data", (data: any) => {
         console.log(`Received data:${data}`);
       });
     });
@@ -89,12 +103,12 @@ export class PeerManager {
       // 为数据通道上的响应设置侦听器
       const onResponse = (event: any) => {
         if (
-          event.data.type === "call_pre_response" &&
-          event.data.from === this.remotePeerId.value
+          event.type === "call_pre_response" &&
+          event.from === this.remotePeerId.value
         ) {
           responseReceived = true;
           this.dataConnect.value?.removeListener("data", onResponse); // Remove the listener once response is received
-          if (event.data.accepted) {
+          if (event.accepted) {
             // 继续进行媒体设置
             this.callRequest(video, audio);
           } else {
@@ -103,22 +117,29 @@ export class PeerManager {
           }
         }
       };
-      this.dataConnect.value?.addListener("data", onResponse);
-
+      this.dataConnect.value = this.nearPeer.connect(this.remotePeerId.value);
+      this.dataConnect.value.on("error", (error) => {
+        console.log("call_pre_request error ", error);
+      });
+      this.dataConnect.value.addListener("data", onResponse);
       // 通过数据通道发送呼叫请求
-      await this.dataConnect.value?.send(callPreRequest);
-
-      // 可选地，在未收到响应的情况下添加超时
-      const timeoutPromise = new Promise(
-        (_, reject) =>
-          setTimeout(() => reject(new Error("No response from peer")), 10000) // Timeout after 10 seconds
-      );
+      this.dataConnect.value.on("open", async () => {
+        await this.dataConnect.value!.send(callPreRequest);
+        this.communication.value.await = true;
+        this.communication.value.call = true;
+        this.elDialogVisible.value = true;
+      });
+      // // 可选地，在未收到响应的情况下添加超时
+      // const timeoutPromise = new Promise(
+      //   (_, reject) =>
+      //     setTimeout(() => reject(new Error("No response from peer")), 10000) // Timeout after 10 seconds
+      // );
 
       // 等待响应或超时
-      await Promise.race([
-        new Promise<void>((resolve) => responseReceived && resolve()),
-        timeoutPromise,
-      ]);
+      // await Promise.race([
+      //   new Promise<void>((resolve) => responseReceived && resolve()),
+      //   timeoutPromise,
+      // ]);
     } catch (error) {
       console.error("Error initiating call:", error);
       this.releaseMediaStream();
@@ -155,29 +176,51 @@ export class PeerManager {
       this.releaseMediaStream();
     }
   };
-  listenCall = () => {
-    this.dataConnect.value?.on("data", async () => {
-      // 在继续之前等待用户通过UI提示的响应
-      const userResponse = await this.showCallPrompt();
 
-      // 通过数据通道发送呼叫请求
-      await this.dataConnect.value?.send({
-        type: "call_pre_response",
-        from: this.nearPeerId.value,
-        ...userResponse,
+  listenCall = () => {
+    this.nearPeer.on("connection", (dataConnection) => {
+      this.dataConnect.value = dataConnection;
+      this.dataConnect.value.on("data", async (event: any) => {
+        this.elDialogVisible.value = true;
+        this.communication.value.video = event.video;
+        this.communication.value.audio = event.audio;
+        // 在继续之前等待用户通过UI提示的响应
+        await new Promise<void>((resolve) => {
+          const timeIntervalStart = () => {
+            if (!this.communication.value.await) {
+              clearTimeout(timeout);
+              resolve();
+            } else {
+              timeout = setTimeout(timeIntervalStart, 1000);
+            }
+          };
+          let timeout = setTimeout(timeIntervalStart, 1000);
+        });
+
+        this.dataConnect.value?.on("error", (error) => {
+          console.log("call_pre_response error ", error);
+        });
+        this.mediaStream.value = await navigator.mediaDevices.getUserMedia({
+          video: this.communication.value.video,
+          audio: this.communication.value.audio,
+        });
+        // 通过数据通道发送呼叫请求
+        await this.dataConnect.value?.send({
+          type: "call_pre_response",
+          from: this.nearPeerId.value,
+          ...this.communication.value,
+        });
+        if (!this.communication.value.accepted) {
+          console.log("User declined the call.");
+          return;
+        }
       });
-      if (!userResponse.accepted) {
-        console.log("User declined the call.");
-        return;
-      }
     });
     this.nearPeer.on("call", async (call: MediaConnection) => {
       try {
         // 阻塞通话对象但暂不接听；首先通过数据通道发送请求
         this.mediaConnect.value = call;
 
-        // 用户已接受，现在继续设置媒体
-        this.mediaConnect.value = call;
         if (this.mediaStream.value) {
           call.answer(this.mediaStream.value);
         }
@@ -209,25 +252,15 @@ export class PeerManager {
     });
   };
 
-  // 函数显示一个UI提示电话接受和媒体偏好
-  showCallPrompt = async () => {
-    return new Promise<{
-      accepted: boolean;
-      video: boolean;
-      audio: boolean;
-    }>((resolve) => {
-      // 在此处实现 UI 逻辑以提示用户接受呼叫并选择媒体选项
-      // 显示带有“接受”和“拒绝”按钮以及视频/音频复选框​​的模式
-      // 一旦用户做出选择，就使用如下对象来解决承诺：
-      // { 接受：布尔值，视频：布尔值，音频：布尔值 }
-      // 在实施之前，一个占位符响应用于演示目的
-      setTimeout(() => {
-        resolve({ accepted: true, video: true, audio: true }); // 用户接受视频和音频
-      }, 1000);
-    });
-  };
   // 释放媒体流资源
   releaseMediaStream = () => {
+    this.communication.value = {
+      await: true,
+      call: false,
+      accepted: false,
+      video: false,
+      audio: false,
+    };
     if (this.mediaStream.value) {
       const tracks = this.mediaStream.value.getTracks();
       tracks.forEach((track) => track.stop());
