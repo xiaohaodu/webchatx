@@ -98,7 +98,7 @@ export class PeerManager {
       }
 
       const callPreRequest = { type: "call_pre_request", video, audio };
-      let responseReceived = false;
+      // let responseReceived = false;
 
       // 为数据通道上的响应设置侦听器
       const onResponse = (event: any) => {
@@ -106,7 +106,7 @@ export class PeerManager {
           event.type === "call_pre_response" &&
           event.from === this.remotePeerId.value
         ) {
-          responseReceived = true;
+          // responseReceived = true;
           this.dataConnect.value?.removeListener("data", onResponse); // Remove the listener once response is received
           if (event.accepted) {
             // 继续进行媒体设置
