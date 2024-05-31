@@ -70,6 +70,9 @@
 <script setup lang="ts">
 import { UploadUserFile } from "element-plus";
 import useDexie from "@/hooks/useDexie";
+import { cloneDeep } from "lodash-es";
+import useLibp2p from "@/hooks/useLibp2p";
+const { libp2pManager } = useLibp2p();
 const { databaseManager } = useDexie();
 const user = ref(
   (await databaseManager.activatedUserDb.info.limit(1).first())!
@@ -100,17 +103,36 @@ const submitAvatar = () => {
     ElMessage.warning("请先选择图片!");
   }
 };
-const timer = ref<NodeJS.Timeout | undefined>(undefined);
+const timer = ref<NodeJS.Timeout>();
 const save = () => {
   // 如果仍在任务在队列的话，清除该宏任务，重新设置任务
   timer.value && clearTimeout(timer.value);
+  const AlertMessage = ref("数据更新中...");
+  const AlertLoading = ref(true);
+  ElMessageBox({
+    title: "更新用户信息",
+    message: () =>
+      h(
+        ElButton,
+        {
+          id: "message",
+          loading: AlertLoading.value,
+          type: "primary",
+        },
+        () => AlertMessage.value
+      ),
+    center: true,
+    showConfirmButton: false,
+    distinguishCancelAndClose: true,
+    closeOnClickModal: false,
+    closeOnPressEscape: false,
+  });
   timer.value = setTimeout(async () => {
+    const _user = cloneDeep(user.value);
     // 当前用户信息更新时user表中信息也要同步更新
-    await databaseManager.activatedUserDb.info.put(user.value);
-    await databaseManager.publicDb.currentUser.put(user.value);
-    await databaseManager.publicDb.users.put(user.value);
+    await libp2pManager.putChatUser(_user);
     clearTimeout(timer.value);
-    timer.value = undefined;
+    ElMessageBox.close();
   }, 100);
 };
 </script>

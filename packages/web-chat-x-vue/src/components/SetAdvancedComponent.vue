@@ -33,6 +33,10 @@
 </template>
 <script lang="ts" setup>
 import useDexie from "@/hooks/useDexie";
+import useLibp2p from "@/hooks/useLibp2p";
+import usePeer from "@/hooks/usePeer";
+import { useRouter } from "vue-router";
+const router = useRouter();
 // import { multiaddr } from "@multiformats/multiaddr";
 const { databaseManager } = useDexie();
 // const user = ref(
@@ -52,8 +56,15 @@ const exportUserDB = async (all: boolean = false) => {
   refA.value.click();
   URL.revokeObjectURL(url);
 };
+const { resetPeerManager } = usePeer();
+const { resetLibp2p } = useLibp2p();
+const { resetDatabaseManager } = useDexie();
 const loginOut = async () => {
   await databaseManager.deleteCurrentUser();
+  resetPeerManager();
+  await resetDatabaseManager();
+  resetLibp2p();
+  router.push({ name: "Login" });
 };
 // const save = () => {
 //   try {

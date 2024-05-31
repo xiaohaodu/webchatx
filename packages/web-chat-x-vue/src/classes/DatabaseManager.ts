@@ -24,7 +24,7 @@ export class DatabaseManager {
   publicDb!: PublicDb;
 
   constructor() {}
-  async createPublicDb() {
+  createPublicDb = async () => {
     const db = new Dexie("webChatX") as PublicDb;
     db.version(1).stores({
       users: "&id",
@@ -39,9 +39,9 @@ export class DatabaseManager {
     this.publicDb = db;
     await this.syncPublicDB();
     return db;
-  }
+  };
 
-  async createActivateUserDb(user: ChatUser, id: string) {
+  createActivateUserDb = async (user: ChatUser, id: string) => {
     if (!isValidUserId(user.userId)) return;
     const peerId = id;
     const db = new Dexie("webChatX@" + peerId) as ActivatedUserDb;
@@ -61,7 +61,7 @@ export class DatabaseManager {
     }
     this.activatedUserDb = db;
     return db;
-  }
+  };
 
   getFriend = async (id: string) => {
     return (await this.activatedUserDb.friends.get(id))!;
@@ -173,7 +173,15 @@ export class DatabaseManager {
     await this.publicDb.currentUser.put(user);
   };
 
-  async exportDatabase(databaseName: string) {
+  putCurrentUser = async (user: ChatUser) => {
+    await Promise.all([
+      this.activatedUserDb.info.put(user),
+      this.publicDb.currentUser.put(user),
+      this.publicDb.users.put(user),
+    ]);
+  };
+
+  exportDatabase = async (databaseName: string) => {
     // Open an arbitrary IndexedDB database:
     const db = await new Dexie(databaseName).open();
     // Export it
@@ -193,13 +201,13 @@ export class DatabaseManager {
     // 使用新的JSON字符串创建一个新的Blob对象
     let newBlob = new Blob([updatedJsonText], { type: "application/json" });
     return newBlob;
-  }
+  };
 
-  async importDatabase(file: Blob) {
+  importDatabase = async (file: Blob) => {
     // Import a file into a Dexie instance:
     const db = await importDB(file);
     return db; // backendDB() gives you the native IDBDatabase object.
-  }
+  };
 
   exportAllUserDB = async () => {
     try {
@@ -332,14 +340,14 @@ export class DatabaseManager {
   }
 
   // 辅助函数，用于合并两个Uint8Array
-  concatTypedArrays(a: Uint8Array, b: Uint8Array): Uint8Array {
+  concatTypedArrays = (a: Uint8Array, b: Uint8Array): Uint8Array => {
     const c = new Uint8Array(a.length + b.length);
     c.set(a, 0);
     c.set(b, a.length);
     return c;
-  }
+  };
 
-  async splitMultipleBlobs(combinedBlob: Blob): Promise<Blob[]> {
+  splitMultipleBlobs = async (combinedBlob: Blob): Promise<Blob[]> => {
     const combinedArray = new Uint8Array(await combinedBlob.arrayBuffer());
     let startIndex = 0;
     const blobs: Blob[] = [];
@@ -368,5 +376,5 @@ export class DatabaseManager {
     }
 
     return blobs;
-  }
+  };
 }

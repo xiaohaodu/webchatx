@@ -284,13 +284,7 @@ export class PeerManager {
       };
     });
   };
-  getDevices = async (
-    kind: "videoinput" | "audioinput"
-  ): Promise<MediaDeviceInfo[]> => {
-    return (await navigator.mediaDevices.enumerateDevices()).filter(
-      (device) => device.kind === kind
-    );
-  };
+
   switchDevice = async (
     kind: "videoinput" | "audioinput",
     newDeviceId: string
@@ -359,12 +353,23 @@ export class PeerManager {
       this.mediaStream.value.addTrack(oldTrack);
     }
   };
+
+  getDevices = async (
+    kind: "videoinput" | "audioinput" | "audiooutput"
+  ): Promise<MediaDeviceInfo[]> => {
+    return (await navigator.mediaDevices.enumerateDevices()).filter(
+      (device) => device.kind === kind
+    );
+  };
   // 定义用于调用特定设备类型的快捷函数
   getCameras = async (): Promise<MediaDeviceInfo[]> => {
     return await this.getDevices("videoinput");
   };
   getMicrophones = async (): Promise<MediaDeviceInfo[]> => {
     return await this.getDevices("audioinput");
+  };
+  getSpeakers = async (): Promise<MediaDeviceInfo[]> => {
+    return await this.getDevices("audiooutput");
   };
 
   // 调用switchDevice时传入具体的设备类型
@@ -374,5 +379,9 @@ export class PeerManager {
 
   switchMicrophone = async (newMicrophoneId: string): Promise<void> => {
     return this.switchDevice("audioinput", newMicrophoneId);
+  };
+
+  clear = () => {
+    this.nearPeer.destroy();
   };
 }

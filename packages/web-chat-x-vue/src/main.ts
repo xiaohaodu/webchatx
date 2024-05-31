@@ -10,16 +10,18 @@ import { PeerManager } from "./classes/PeerManager";
 
 const app = createApp(App);
 // 注册全局变量，确保所有组件都能访问到唯一的数据库实例
-const databaseManager = new DatabaseManager();
-await databaseManager.createPublicDb();
+const databaseManager = ref(new DatabaseManager());
+console.log(databaseManager.value);
+
+await databaseManager.value.createPublicDb();
 app.provide("databaseManager", databaseManager);
 
 // 注册全局变量，确保所有组件都能访问到唯一的Libp2p节点实例
-const libp2pManager = new Libp2pManager();
+const libp2pManager = ref(new Libp2pManager());
 app.provide("libp2pManager", libp2pManager);
 
 // 注册全局变量，确保所有组件都能都访问到唯一的WebRTC节点实例
-const peerManager = new PeerManager();
+const peerManager = ref(new PeerManager());
 app.provide("peerManager", peerManager);
 
 app.use(router);

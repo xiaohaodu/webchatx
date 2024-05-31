@@ -147,7 +147,7 @@ router.beforeEach(
     next: NavigationGuardNext
   ) => {
     useDark();
-    const { createActivateUserDb, databaseManager } = useDb();
+    const { databaseManager } = useDb();
     const { libp2pManager } = useLibp2p();
     const { peerManager } = usePeer();
     libp2pManager.databaseManager = databaseManager;
@@ -169,7 +169,10 @@ router.beforeEach(
             return `webChatX@${currentUser.id}` === dbInfo.name;
           });
           if (have) {
-            await createActivateUserDb(currentUser, currentUser.id);
+            await databaseManager.createActivateUserDb(
+              currentUser,
+              currentUser.id
+            );
             await databaseManager.syncPublicDB();
             // 如果当前libp2p节点管理器状态没有在运行，则根据当前用户创建启动节点
             if (!libp2pManager.getStatus()) {

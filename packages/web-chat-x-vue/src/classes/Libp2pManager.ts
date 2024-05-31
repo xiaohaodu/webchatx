@@ -52,11 +52,12 @@ export class Libp2pManager {
   public databaseManager: DatabaseManager | undefined;
   public peerManager: PeerManager | undefined;
   private running: boolean = false;
+  public enableLocalNode = false;
   private textDecoder = new TextDecoder();
   private textEncoder = new TextEncoder();
   private relayLink =
     "/dns/webchatx.mayuan.work/tcp/10000/ws/p2p/12D3KooWFzsY7wUBHwbrz6m9nFfLCDwqLD4LS9JykKxSZ4zqG7Pg/p2p-circuit/webrtc/p2p/";
-  async createLibp2pNode(peerId?: PeerId): Promise<void> {
+  createLibp2pNode = async (peerId?: PeerId): Promise<void> => {
     this.libp2p = await createLibp2p({
       addresses: {
         listen: ["/webrtc"],
@@ -118,9 +119,9 @@ export class Libp2pManager {
     this.peerStore = this.libp2p.peerStore;
     await this.libp2pHandleExpand();
     this.running = true;
-  }
+  };
 
-  async startLibp2pNode(relayMultiaddrs?: Multiaddr[]): Promise<void> {
+  startLibp2pNode = async (relayMultiaddrs?: Multiaddr[]): Promise<void> => {
     relayMultiaddrs?.length && this.setRelayMultiaddr(relayMultiaddrs);
     return new Promise(async (resolve, reject) => {
       let timeInterval: NodeJS.Timeout;
@@ -157,9 +158,12 @@ export class Libp2pManager {
         reject(error);
       }
     });
-  }
-
-  async getLibp2pKadDHTDiscovery() {
+  };
+  getLibp2pKadDHTDiscoveryTime?: NodeJS.Timeout;
+  getLibp2pKadDHTDiscovery = async () => {
+    if (!this.enableLocalNode) {
+      return;
+    }
     try {
       const libp2pKadDHTDiscovery = await fetch("http://127.0.0.1:8000/libp2p");
       const peerHasDiscoveryStore =
@@ -171,19 +175,19 @@ export class Libp2pManager {
           this.libp2p.getProtocols()
         );
       });
-      setTimeout(() => {
+      this.getLibp2pKadDHTDiscoveryTime = setTimeout(() => {
         this.getLibp2pKadDHTDiscovery();
       }, 10000);
     } catch (error) {
       ElMessage({
         type: "error",
-        message: "本地节点获取节点发现失败",
+        message: "连接本地全功能节点失败，请启动本地节点",
       });
       console.log("error getLibp2pKadDHTDiscovery", error);
     }
-  }
+  };
 
-  handleListenEvent() {
+  handleListenEvent = () => {
     // this.libp2p.addEventListener("connection:open", (connection) => {
     //   console.log("connection:open", connection.detail);
     // });
@@ -250,81 +254,81 @@ export class Libp2pManager {
     // this.libp2p.addEventListener("transport:listening", (listener) => {
     //   console.log("transport:listening", listener.detail);
     // });
-  }
+  };
 
-  getConnectMultiaddr(peerId: string) {
+  getConnectMultiaddr = (peerId: string) => {
     return multiaddr(this.relayLink + peerId);
-  }
-  getChannels() {
+  };
+  getChannels = () => {
     return this.channels;
-  }
-  getStatus(): boolean {
+  };
+  getStatus = (): boolean => {
     return this.running;
-  }
-  getRelayMultiaddr(): Multiaddr[] {
+  };
+  getRelayMultiaddr = (): Multiaddr[] => {
     return this.relayMultiaddrs;
-  }
-  setRelayMultiaddr(relayMultiaddrs: Multiaddr[]): Multiaddr[] {
+  };
+  setRelayMultiaddr = (relayMultiaddrs: Multiaddr[]): Multiaddr[] => {
     this.relayMultiaddrs = relayMultiaddrs;
     return this.relayMultiaddrs;
-  }
+  };
   // Getter for libp2p
-  getLibp2p(): Libp2p | undefined {
+  getLibp2p = (): Libp2p | undefined => {
     return this.libp2p;
-  }
+  };
 
-  async getMessageAggregation(
+  getMessageAggregation = async (
     id: string,
     postUserId: string,
     answerUserId: string,
     channelId: string = ""
-  ) {
+  ) => {
     return (await this.databaseManager?.getMessageAggregation(
       id,
       postUserId,
       answerUserId,
       channelId
     ))!;
-  }
+  };
 
-  async getPublicDbUsers() {
+  getPublicDbUsers = async () => {
     return (await this.databaseManager?.getPublicDbUsers())!;
-  }
+  };
 
-  async getFriend(id: string) {
+  getFriend = (id: string) => {
     return this.friends?.value.find((value) => {
       return value.id == id;
     });
-  }
+  };
 
-  getSubscriber(id: string) {
+  getSubscriber = (id: string) => {
     return this.subscribers?.value.find((value) => {
       return (value.id = id);
     });
-  }
+  };
 
-  getChannel(id: string) {
+  getChannel = (id: string) => {
     return this.channels?.value.find((value: ChatChannel) => {
       return value.id == id;
     });
-  }
+  };
 
-  getFriends() {
+  getFriends = () => {
     return this.friends;
-  }
+  };
 
-  getSubscribers() {
+  getSubscribers = () => {
     return this.subscribers;
-  }
+  };
 
-  getPeerStore(): PeerStore | undefined {
+  getPeerStore = (): PeerStore | undefined => {
     return this.peerStore;
-  }
-  getPeerId(): PeerId | undefined {
+  };
+  getPeerId = (): PeerId | undefined => {
     return this.peerId;
-  }
+  };
 
-  async setChatUser(chatUser: ChatUser) {
+  setChatUser = async (chatUser: ChatUser) => {
     this.chatUser = ref(chatUser);
     this.friends = ref(
       (await this.databaseManager?.activatedUserDb.friends.toArray())! || []
@@ -335,9 +339,14 @@ export class Libp2pManager {
     this.subscribers = ref(
       (await this.databaseManager?.activatedUserDb.subscribers.toArray())! || []
     );
-  }
+  };
 
-  async addFriend(friend: ChatUser) {
+  putChatUser = async (user: ChatUser) => {
+    this.chatUser!.value = user;
+    await this.databaseManager?.putCurrentUser(user);
+  };
+
+  addFriend = async (friend: ChatUser) => {
     const friendIds = this.chatUser?.value.friendIds!;
     if (!friendIds.includes(friend.id)) {
       friendIds.push(friend.id);
@@ -348,9 +357,9 @@ export class Libp2pManager {
       );
       friend.isOnline = true;
     }
-  }
+  };
 
-  async addChannel(channel: ChatChannel) {
+  addChannel = async (channel: ChatChannel) => {
     const channelIds = this.chatUser?.value.channelIds!;
     if (!channelIds.includes(channel.id)) {
       channelIds.push(channel.id);
@@ -360,18 +369,18 @@ export class Libp2pManager {
         cloneDeep(this.chatUser?.value!)
       );
     }
-  }
+  };
   /**
    *
    * @param linkOrSend boolean @description true 是为link false 为send
    * @param channel ChatChannel
    * @param subscriber ChatUser
    */
-  async addChannelSubscriber(
+  addChannelSubscriber = async (
     linkOrSend: boolean,
     channel: ChatChannel,
     subscriber: ChatUser
-  ) {
+  ) => {
     if (linkOrSend) {
       const have = channel.friendIds.includes(subscriber.id);
       if (!have) {
@@ -395,41 +404,41 @@ export class Libp2pManager {
     }
     // this.channels!.value =
     //   (await this.databaseManager?.activatedUserDb.channels.toArray())!;
-  }
+  };
 
-  getChatUser() {
+  getChatUser = () => {
     return this.chatUser!;
-  }
+  };
 
-  async createNewUser(user: ChatUser) {
+  createNewUser = async (user: ChatUser) => {
     await this.databaseManager?.createNewUser(user);
-  }
+  };
 
-  async createActivateUserDb(user: ChatUser, peerId: string) {
+  createActivateUserDb = async (user: ChatUser, peerId: string) => {
     await this.databaseManager?.createActivateUserDb(user, peerId);
-  }
+  };
 
   constructor() {}
 
-  cyclicQuery() {
+  cyclicQuery = () => {
     this.connectFriends();
     this.subscribe();
-    const fn = async () => {
-      console.log(
-        "peers has been discovered",
-        await this.libp2p?.peerStore.all()
-      );
-      clearTimeout(timer);
-      timer = setTimeout(fn, 10000);
-    };
-    let timer: NodeJS.Timeout = setTimeout(fn, 10000);
-  }
+    // const fn = async () => {
+    //   console.log(
+    //     "peers has been discovered",
+    //     await this.libp2p?.peerStore.all()
+    //   );
+    //   clearTimeout(timer);
+    //   timer = setTimeout(fn, 10000);
+    // };
+    // let timer: NodeJS.Timeout = setTimeout(fn, 10000);
+  };
 
-  async subscribeChannel(
+  subscribeChannel = async (
     channelName: string,
     channelId: string,
     channelDescription: string
-  ) {
+  ) => {
     const channel = await ChatChannel.create(
       channelName,
       channelDescription,
@@ -457,8 +466,8 @@ export class Libp2pManager {
       this.databaseManager?.activatedUserDb.messages.put(messages),
     ]);
     return channel;
-  }
-
+  };
+  subscribeTime?: NodeJS.Timeout;
   subscribe = () => {
     const fallbackCall = async (
       channel: ChatChannel,
@@ -497,7 +506,7 @@ export class Libp2pManager {
     }
     Promise.all(promiseAllArray).then(() => {
       new Promise<void>((resolve) => {
-        setTimeout(() => {
+        this.subscribeTime = setTimeout(() => {
           this.subscribe();
           resolve();
         }, 5000);
@@ -505,7 +514,10 @@ export class Libp2pManager {
     });
   };
 
-  async publishSubscribeMessage(chatChannel: ChatChannel, message: string) {
+  publishSubscribeMessage = async (
+    chatChannel: ChatChannel,
+    message: string
+  ) => {
     await (this.libp2p!.services.pubsub as PubSub<GossipsubEvents>).publish(
       `${chatChannel.name}@${chatChannel.id}`,
       new TextEncoder().encode(
@@ -533,9 +545,9 @@ export class Libp2pManager {
       chatChannel.id
     ))!;
     return messages;
-  }
-
-  connectFriends() {
+  };
+  connectFriendTimeout?: NodeJS.Timeout;
+  connectFriends = () => {
     const fallbackCall = async (
       friendPeerId: PeerId,
       friendPeerIdString: string
@@ -558,15 +570,15 @@ export class Libp2pManager {
     });
     Promise.all(promiseAllArray).then(() => {
       new Promise<void>((resolve) => {
-        setTimeout(() => {
+        this.connectFriendTimeout = setTimeout(() => {
           this.connectFriends();
           resolve();
         }, 5000);
       });
     });
-  }
+  };
 
-  async libp2pHandleExpand() {
+  libp2pHandleExpand = async () => {
     if (this.libp2p) {
       await this.libp2p.handle("/friends/add", async ({ stream }) => {
         let remoteMessageString = "";
@@ -732,9 +744,9 @@ export class Libp2pManager {
     } else {
       console.log("libp2p is undefined or null");
     }
-  }
+  };
 
-  async sendFile(friend: ChatUser, file: File) {
+  sendFile = async (friend: ChatUser, file: File) => {
     return new Promise(async (resolve) => {
       const fileString = await fileToBase64(file);
       const timeInterval = ref<NodeJS.Timeout>();
@@ -792,12 +804,12 @@ export class Libp2pManager {
       };
       timeIntervalStart();
     });
-  }
+  };
 
-  async sendMessage(
+  sendMessage = async (
     friend: ChatUser,
     message: string
-  ): Promise<ChatMessageAggregationInfo> {
+  ): Promise<ChatMessageAggregationInfo> => {
     return new Promise(async (resolve, _) => {
       const timeInterval = ref<NodeJS.Timeout>();
       const timeIntervalStart = async () => {
@@ -848,12 +860,12 @@ export class Libp2pManager {
       };
       timeIntervalStart();
     });
-  }
+  };
 
-  async requestFriend(
+  requestFriend = async (
     remotePeer: PeerId | Multiaddr,
     validationMessage: string
-  ): Promise<Stream> {
+  ): Promise<Stream> => {
     return new Promise(async (resolve, _) => {
       const timeInterval = ref<NodeJS.Timeout>();
       const timeIntervalStart = async (remotePeer: PeerId | Multiaddr) => {
@@ -964,5 +976,12 @@ export class Libp2pManager {
         });
       timeIntervalStart(remotePeer);
     });
-  }
+  };
+
+  clear = () => {
+    clearTimeout(this.getLibp2pKadDHTDiscoveryTime);
+    clearTimeout(this.connectFriendTimeout);
+    clearTimeout(this.subscribeTime);
+    this.libp2p.stop();
+  };
 }
