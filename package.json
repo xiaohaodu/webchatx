@@ -15,6 +15,7 @@
     "copy:prod": "copyfiles -u 2 docker/prod/**/* dist",
     "copy:dev": "copyfiles -u 2 docker/dev/**/* dist",
     "tsc": "pnpm --filter web-chat-x-express tsc --noEmit&&pnpm --filter web-chat-x-express tsc --noEmit",
+    "countLines": "cloc . --exclude-dir=node_modules,build,dist,.pnpm-store --include-lang=JavaScript,TypeScript,Vue,HTML,CSS,SCSS,SASS,Less,JSON,Markdown",
     "prepare": "husky"
   },
   "keywords": [],
