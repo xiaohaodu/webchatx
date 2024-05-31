@@ -66,7 +66,7 @@
                 </el-form-item>
               </el-form>
               <div>
-                <qrcode-component :value="user.id"></qrcode-component>
+                <qrcode-component :value="user.userId"></qrcode-component>
               </div>
             </div>
           </el-card>
