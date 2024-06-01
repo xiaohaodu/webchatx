@@ -259,6 +259,12 @@ export class PeerManager {
 
   // 释放媒体流资源
   releaseMediaStream = () => {
+    if (this.mediaConnect.value) {
+      this.mediaConnect.value.close();
+      console.log("close mediaConnect and clear mediaStream");
+    } else {
+      console.log("only clear mediaStream");
+    }
     this.communication.value.await = true;
     this.communication.value.accepted = false;
     if (this.mediaStream.value) {

@@ -19,5 +19,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["*.ts", "next/test.ts"]
+  "include": ["*.ts", "tests/*.ts"]
 }
