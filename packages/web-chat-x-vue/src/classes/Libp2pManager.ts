@@ -7,13 +7,7 @@ import { webSockets } from "@libp2p/websockets";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 import { echo } from "@libp2p/echo";
 import * as filters from "@libp2p/websockets/filters";
-import {
-  PeerId,
-  PeerStore,
-  PubSub,
-  SignedMessage,
-  Stream,
-} from "@libp2p/interface";
+import { PeerId, PeerStore, PubSub, SignedMessage } from "@libp2p/interface";
 import { Multiaddr, multiaddr } from "@multiformats/multiaddr";
 import { GossipsubEvents, gossipsub } from "@chainsafe/libp2p-gossipsub";
 import ChatUser from "./ChatUser";
