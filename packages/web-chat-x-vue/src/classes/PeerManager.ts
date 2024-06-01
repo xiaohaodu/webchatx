@@ -36,6 +36,8 @@ export class PeerManager {
     this.elDialogVisible = ref(false);
     this.remotePeerId = ref("");
     this.communication = ref({
+      answer: "",
+      caller: "",
       await: true,
       call: false,
       accepted: false,
