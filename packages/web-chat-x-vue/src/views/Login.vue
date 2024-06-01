@@ -173,7 +173,7 @@ async function submitForm() {
         await libp2pManager.createActivateUserDb(chatUser, chatUser.id);
         await libp2pManager.createLibp2pNode(chatUser.peerId);
         await libp2pManager.startLibp2pNode();
-        libp2pManager.setChatUser(chatUser);
+        await libp2pManager.setChatUser(chatUser);
       } else if (form.loginType === "import") {
         await databaseManager.importDB(dbUploadFile.value!.raw!);
         const interval = async () => {
@@ -200,7 +200,7 @@ async function submitForm() {
           const peerId = peerIdFromPeerId(currentUser_.peerId);
           await libp2pManager.createLibp2pNode(peerId);
           await libp2pManager.startLibp2pNode();
-          libp2pManager.setChatUser(currentUser_);
+          await libp2pManager.setChatUser(currentUser_);
         } else {
           ElMessage({
             type: "info",
