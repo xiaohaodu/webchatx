@@ -128,11 +128,13 @@ onUnmounted(() => {
 });
 function hungUp() {
   elDialogVisible.value = false;
-  if (peerManager.mediaConnect.value) {
-    peerManager.mediaConnect.value.close();
-  } else {
-    console.log(peerManager.mediaConnect, peerManager.mediaConnect.value);
-  }
+  nextTick(() => {
+    if (peerManager.mediaConnect.value) {
+      peerManager.mediaConnect.value.close();
+    } else {
+      console.log(peerManager.mediaConnect, peerManager.mediaConnect.value);
+    }
+  });
 }
 
 function reject() {
