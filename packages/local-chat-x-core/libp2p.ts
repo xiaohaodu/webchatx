@@ -4,7 +4,6 @@ import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { circuitRelayServer } from "@libp2p/circuit-relay-v2";
 import { webSockets } from "@libp2p/websockets";
-import { webRTC } from "@libp2p/webrtc";
 import * as filters from "@libp2p/websockets/filters";
 import { identify } from "@libp2p/identify";
 import {
@@ -41,28 +40,11 @@ export default class Libp2pManager {
     const peerId = await createEd25519PeerId();
     return await createLibp2p({
       addresses: {
-        listen: ["/ip4/127.0.0.1/tcp/9000/ws", "/webrtc"], // 替换为实际希望监听的 IP 和端口
+        listen: ["/ip4/0.0.0.0/tcp/9000/ws", "/webrtc"], // 替换为实际希望监听的 IP 和端口
       },
       transports: [
         webSockets({
           filter: filters.all,
-        }),
-        webRTC({
-          rtcConfiguration: {
-            iceServers: [
-              {
-                urls: "stun:stun.l.google.com:19302",
-              },
-              {
-                urls: "stun:global.stun.twilio.com:3478",
-              },
-              {
-                urls: "turn:webchatx.stun.mayuan.work:3478",
-                username: "dxh",
-                credential: "187139",
-              },
-            ],
-          },
         }),
       ],
       connectionEncryption: [noise(), tls()],
@@ -126,15 +108,7 @@ export default class Libp2pManager {
     // });
     this.libp2p.addEventListener("peer:discovery", (peerIdInfo) => {
       // console.log("peer:discovery ", peerIdInfo.detail);
-      console.log(
-        "peer:discovery",
-        peerIdInfo.detail.multiaddrs.filter((multiaddr) => {
-          return (
-            multiaddr.toString().includes("webrtc") ||
-            multiaddr.toString().includes("ws")
-          );
-        })
-      );
+      console.log("peer:discovery", peerIdInfo.detail);
     });
 
     // this.libp2p.addEventListener("peer:identify", (identifyResult) => {

@@ -1,0 +1,10 @@
+{
+  "exec": "ts-node --esm",
+  "watch": ["./"],
+  "ext": "ts",
+  "ignore": ["node_modules"],
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "verbose": true
+}

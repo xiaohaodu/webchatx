@@ -54,7 +54,7 @@ export class Libp2pManager {
   createLibp2pNode = async (peerId?: PeerId): Promise<void> => {
     this.libp2p = await createLibp2p({
       addresses: {
-        listen: ["/webrtc"],
+        listen: ["/webrtc", `/ip4/0.0.0.0/tcp/0/ws/p2p/${peerId?.toString()}`],
       },
       transports: [
         webSockets({ filter: filters.dnsWsOrWss }),
