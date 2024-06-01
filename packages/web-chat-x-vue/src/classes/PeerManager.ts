@@ -115,6 +115,9 @@ export class PeerManager {
             console.log("Call request was declined.");
             this.releaseMediaStream(); // Clean up if call is not accepted
           }
+          console.log("reset");
+          this.communication.value.await = true;
+          this.communication.value.accepted = false;
         }
       };
       this.dataConnect.value = this.nearPeer.connect(this.remotePeerId.value);
@@ -200,11 +203,7 @@ export class PeerManager {
         this.dataConnect.value?.on("error", (error) => {
           console.log("call_pre_response error ", error);
         });
-        this.mediaStream.value = await navigator.mediaDevices.getUserMedia({
-          video: this.communication.value.video,
-          audio: this.communication.value.audio,
-        });
-        // 通过数据通道发送呼叫请求
+        // 通过数据通道发送呼叫反馈
         await this.dataConnect.value?.send({
           type: "call_pre_response",
           from: this.nearPeerId.value,
@@ -212,8 +211,14 @@ export class PeerManager {
         });
         if (!this.communication.value.accepted) {
           console.log("User declined the call.");
-          return;
+        } else {
+          this.mediaStream.value = await navigator.mediaDevices.getUserMedia({
+            video: this.communication.value.video,
+            audio: this.communication.value.audio,
+          });
         }
+        this.communication.value.await = true;
+        this.communication.value.accepted = false;
       });
     });
     this.nearPeer.on("call", async (call: MediaConnection) => {

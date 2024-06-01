@@ -182,8 +182,6 @@ async function isOnlineProxy(handle:Function|(()=>{})){
 }
 
 const {peerManager}=usePeer()
-peerManager.remotePeerId=friendId
-peerManager.remoteUser=friend
 async function audioCall(){
   await peerManager.speakCall(false,true)
 }

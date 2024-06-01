@@ -22,20 +22,18 @@
       class="flex flex-col items-center justify-between"
     >
       <template #header>
-        <div v-show="peerManager.remoteUser?.value" class="flex items-center">
+        <div v-if="friend" class="flex items-center">
           <img
-            :src="peerManager.remoteUser?.value.avatar"
+            :src="friend?.avatar"
             alt="User Avatar"
             class="w-12 h-12 rounded-full mr-2"
           />
           <el-tooltip
-            :content="`${peerManager.remoteUser?.value.name}@${peerManager.remoteUser?.value.id}`"
+            :content="`${friend?.name}@${friend?.id}`"
             placement="top"
           >
             <p class="text-gray-800 break-all line-clamp-1 w-36 text-ellipsis">
-              {{
-                `${peerManager.remoteUser?.value.name}@${peerManager.remoteUser?.value.id}`
-              }}
+              {{ `${friend?.name}@${friend?.id}` }}
             </p>
           </el-tooltip>
         </div>
@@ -89,6 +87,7 @@
 <script lang="ts" setup>
 import useLibp2p from "@/hooks/useLibp2p";
 import usePeer from "@/hooks/usePeer";
+import { useRoute } from "vue-router";
 const { peerManager } = usePeer();
 const { libp2pManager } = useLibp2p();
 const currentUser = libp2pManager.getChatUser();
@@ -98,30 +97,43 @@ peerManager.createPeer({
 const elDialogVisible = ref(true);
 const remoteVideoElement = ref() as Ref<HTMLVideoElement>;
 const nearVideoElement = ref() as Ref<HTMLVideoElement>;
-const communication = peerManager.communication;
+const communication = ref({
+  await: true,
+  call: false,
+  accepted: false,
+  video: false,
+  audio: false,
+});
 peerManager.remoteVideoElement = remoteVideoElement;
 peerManager.nearVideoElement = nearVideoElement;
 peerManager.elDialogVisible = elDialogVisible;
-
+peerManager.communication = communication;
+const route = useRoute();
+const friendId = computed(() => {
+  return route.params.user_id as string;
+});
+const friend = computed(() => {
+  return libp2pManager.getFriend(friendId.value)!;
+});
+peerManager.remotePeerId = friendId;
+peerManager.remoteUser = friend;
 onMounted(() => {
-  elDialogVisible.value = true;
+  elDialogVisible.value = false;
   nextTick(() => {
-    elDialogVisible.value = false;
     peerManager.listenCall();
   });
 });
 onUnmounted(() => {
   peerManager.releaseMediaStream();
 });
-
 function hungUp() {
   elDialogVisible.value = false;
-  peerManager.mediaConnect.value!.close();
+  peerManager.mediaConnect?.value?.close();
 }
 
 function reject() {
-  communication.value.await = false;
   communication.value.accepted = false;
+  communication.value.await = false;
   elDialogVisible.value = false;
 }
 
