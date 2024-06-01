@@ -140,10 +140,10 @@ const friendId=computed(()=>{
   return route.params.user_id as string
 })
 const currentUser= libp2pManager.getChatUser()
-const [messages,friend]=await Promise.all([
+const [messages]=await Promise.all([
 ref(await libp2pManager.getMessageAggregation("",currentUser?.value.id,friendId.value))
-,ref((await libp2pManager.getFriend(friendId.value))!)
 ])
+const friend=ref(libp2pManager.getFriend(friendId.value)!)
 watchEffect(async ()=>{
   messages.value=await libp2pManager.getMessageAggregation("",currentUser?.value.id,friendId.value)
   friend.value=(libp2pManager.getFriend(friendId.value))!
