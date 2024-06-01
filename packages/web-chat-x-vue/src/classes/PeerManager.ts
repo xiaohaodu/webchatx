@@ -18,6 +18,8 @@ export class PeerManager {
   public remoteUser: Ref<ChatUserInfo> | undefined;
   public elDialogVisible: Ref<boolean>;
   public communication: Ref<{
+    caller: string;
+    answer: string;
     await: boolean;
     call: boolean;
     accepted: boolean;
@@ -97,14 +99,21 @@ export class PeerManager {
         );
       }
 
-      const callPreRequest = { type: "call_pre_request", video, audio };
+      this.communication.value.video = video;
+      this.communication.value.audio = audio;
+      this.communication.value.caller = this.nearPeerId.value;
+      this.communication.value.answer = this.remotePeerId.value;
+      const callPreRequest = {
+        type: "call_pre_request",
+        ...this.communication.value,
+      };
       // let responseReceived = false;
 
       // 为数据通道上的响应设置侦听器
       const onResponse = (event: any) => {
         if (
           event.type === "call_pre_response" &&
-          event.from === this.remotePeerId.value
+          event.answer === this.remotePeerId.value
         ) {
           // responseReceived = true;
           this.dataConnect.value?.removeListener("data", onResponse); // Remove the listener once response is received
@@ -173,7 +182,7 @@ export class PeerManager {
         await this.waitForVideoReady(this.remoteVideoElement.value!);
         this.elDialogVisible.value = true;
       });
-      this.mediaConnect.value!.on("close", this.releaseMediaStream);
+      this.mediaConnect.value.on("close", this.releaseMediaStream);
     } catch (error) {
       console.error("Error setting up media after acceptance:", error);
       this.releaseMediaStream();
@@ -187,6 +196,8 @@ export class PeerManager {
         this.elDialogVisible.value = true;
         this.communication.value.video = event.video;
         this.communication.value.audio = event.audio;
+        this.communication.value.answer = event.answer;
+        this.communication.value.caller = event.caller;
         // 在继续之前等待用户通过UI提示的响应
         await new Promise<void>((resolve) => {
           const timeIntervalStart = () => {
@@ -206,7 +217,6 @@ export class PeerManager {
         // 通过数据通道发送呼叫反馈
         await this.dataConnect.value?.send({
           type: "call_pre_response",
-          from: this.nearPeerId.value,
           ...this.communication.value,
         });
         if (!this.communication.value.accepted) {
@@ -267,6 +277,8 @@ export class PeerManager {
     }
     this.communication.value.await = true;
     this.communication.value.accepted = false;
+    this.communication.value.caller = "";
+    this.communication.value.answer = "";
     if (this.mediaStream.value) {
       const tracks = this.mediaStream.value.getTracks();
       tracks.forEach((track) => track.stop());

@@ -65,13 +65,29 @@
 <script lang="ts" setup>
 // import useLibp2p from "@/hooks/useLibp2p";
 // const { libp2pManager } = useLibp2p();
-
 import usePeer from "@/hooks/usePeer";
+
 const { peerManager } = usePeer();
-const videoDevices = ref((await peerManager.getCameras()).slice(0, 1));
-const currentVideo = ref<MediaDeviceInfo>(videoDevices.value[0]);
-const microphoneDevices = ref((await peerManager.getMicrophones()).slice(0, 1));
-const currentMicrophone = ref<MediaDeviceInfo>(microphoneDevices.value[0]);
-const speakerDevices = ref((await peerManager.getSpeakers()).slice(0, 1));
-const currentSpeaker = ref<MediaDeviceInfo>(speakerDevices.value[0]);
+
+// 使用 Promise.all 并行获取所有设备信息
+const [videoDevicesRaw, microphoneDevicesRaw, speakerDevicesRaw] =
+  await Promise.all([
+    peerManager.getCameras(),
+    peerManager.getMicrophones(),
+    peerManager.getSpeakers(),
+  ]);
+
+// 由于您只想取每个设备类型的前一个设备，所以我们使用 slice 方法
+const videoDevices = ref(videoDevicesRaw.slice(0, 1));
+const currentVideo = ref<MediaDeviceInfo>(videoDevices.value[0] ?? undefined);
+
+const microphoneDevices = ref(microphoneDevicesRaw.slice(0, 1));
+const currentMicrophone = ref<MediaDeviceInfo>(
+  microphoneDevices.value[0] ?? undefined
+);
+
+const speakerDevices = ref(speakerDevicesRaw.slice(0, 1));
+const currentSpeaker = ref<MediaDeviceInfo>(
+  speakerDevices.value[0] ?? undefined
+);
 </script>

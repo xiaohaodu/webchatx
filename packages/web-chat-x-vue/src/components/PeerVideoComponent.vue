@@ -22,18 +22,18 @@
       class="flex flex-col items-center justify-between"
     >
       <template #header>
-        <div v-if="friend" class="flex items-center">
+        <div v-if="communication.caller" class="flex items-center">
           <img
-            :src="friend?.avatar"
+            :src="caller?.avatar"
             alt="User Avatar"
             class="w-12 h-12 rounded-full mr-2"
           />
           <el-tooltip
-            :content="`${friend?.name}@${friend?.id}`"
+            :content="`${caller?.name}@${caller?.id}`"
             placement="top"
           >
             <p class="text-gray-800 break-all line-clamp-1 w-36 text-ellipsis">
-              {{ `${friend?.name}@${friend?.id}` }}
+              {{ `${caller?.name}@${caller?.id}` }}
             </p>
           </el-tooltip>
         </div>
@@ -98,11 +98,20 @@ const elDialogVisible = ref(true);
 const remoteVideoElement = ref() as Ref<HTMLVideoElement>;
 const nearVideoElement = ref() as Ref<HTMLVideoElement>;
 const communication = ref({
+  answer: "",
+  caller: "",
   await: true,
   call: false,
   accepted: false,
   video: false,
   audio: false,
+});
+const caller = computed(() => {
+  return (
+    (communication.value.caller &&
+      libp2pManager.getFriend(communication.value.caller)) ||
+    undefined
+  );
 });
 peerManager.remoteVideoElement = remoteVideoElement;
 peerManager.nearVideoElement = nearVideoElement;
