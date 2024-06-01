@@ -146,7 +146,7 @@ ref(await libp2pManager.getMessageAggregation("",currentUser?.value.id,friendId.
 ])
 watchEffect(async ()=>{
   messages.value=await libp2pManager.getMessageAggregation("",currentUser?.value.id,friendId.value)
-  friend.value=(await libp2pManager.getFriend(friendId.value))!
+  friend.value=( libp2pManager.getFriend(friendId.value))!
 })
 onMounted(()=>{
   nextTick(()=>{
