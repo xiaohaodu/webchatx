@@ -22,7 +22,7 @@
       class="flex flex-col items-center justify-between"
     >
       <template #header>
-        <div class="flex items-center">
+        <div v-show="peerManager.remoteUser?.value" class="flex items-center">
           <img
             :src="peerManager.remoteUser?.value.avatar"
             alt="User Avatar"
