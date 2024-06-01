@@ -49,7 +49,9 @@ declare global {
 
   // 添加朋友时发送和接收的数据类型
   interface ProtocolFriendAdd {
+    type: "accept" | "reject";
     message: string;
+    connectFromUserId: string;
     user: {
       userId: string;
       peerId: string;

@@ -26,6 +26,7 @@ import {
   generateRandomHexChars,
   getObfuscationCodeFromUserId,
 } from "@/utils";
+import { cloneDeep } from "lodash-es";
 const { libp2pManager } = useLibp2p();
 const currentUser = libp2pManager.getChatUser();
 const noSpam = ref(getObfuscationCodeFromUserId(currentUser.value.userId));
@@ -33,6 +34,7 @@ const generateNoSpam = () => {
   noSpam.value = generateRandomHexChars();
 };
 watch(noSpam, async () => {
+  await libp2pManager.putChatUser(cloneDeep(currentUser.value));
   currentUser.value.userId = await buildUserId(
     currentUser.value.id,
     noSpam.value

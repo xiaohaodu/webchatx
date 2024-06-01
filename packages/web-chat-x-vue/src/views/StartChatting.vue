@@ -103,7 +103,6 @@
 import useDb from "@/hooks/useDexie";
 import useLibp2p from "@/hooks/useLibp2p";
 import { isValidUserId, getPeerIdFromUserId } from "@/utils";
-import { peerIdFromString } from "@libp2p/peer-id";
 import { FormInstance, FormRules } from "element-plus";
 import { useRouter } from "vue-router";
 const { databaseManager } = useDb();
@@ -129,18 +128,19 @@ async function friendRequest() {
       const remotePeerIdString = getPeerIdFromUserId(
         privateChatFormData.userId
       );
-      const remotePeerId = peerIdFromString(remotePeerIdString);
-      await libp2pManager.requestFriend(
-        remotePeerId,
+      const isOk = await libp2pManager.requestFriend(
+        privateChatFormData.userId,
         privateChatFormData.validationMessage ||
           privateChatFormData.defaultValidationMessage
       );
-      router.push({
-        name: "PrivateChat",
-        params: {
-          user_id: remotePeerIdString,
-        },
-      });
+      if (isOk) {
+        router.push({
+          name: "PrivateChat",
+          params: {
+            user_id: remotePeerIdString,
+          },
+        });
+      }
     } catch (error) {
       console.error("Error submitting private chat form:", error);
     }

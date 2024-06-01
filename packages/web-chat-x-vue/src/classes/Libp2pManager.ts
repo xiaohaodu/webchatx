@@ -26,7 +26,7 @@ import { cloneDeep } from "lodash-es";
 import { peerIdFromPeerId, peerIdFromString } from "@libp2p/peer-id";
 import { PeerManager } from "./PeerManager";
 import ChatChannel from "./ChatChannel";
-import { base64ToFile, fileToBase64 } from "@/utils";
+import { base64ToFile, fileToBase64, getPeerIdFromUserId } from "@/utils";
 import { dcutr } from "@libp2p/dcutr";
 import { bootstrap } from "@libp2p/bootstrap";
 import { Peer } from "@libp2p/interface";
@@ -593,10 +593,27 @@ export class Libp2pManager {
         const remoteMessageObject = JSON.parse(
           remoteMessageString
         ) as ProtocolFriendAdd;
+        if (
+          remoteMessageObject.connectFromUserId != this.chatUser?.value.userId
+        ) {
+          await stream.sink([
+            Uint8Array.from(
+              this.textEncoder.encode(
+                JSON.stringify({
+                  type: "reject",
+                  message: "用户ID已过期，请给出新的用户ID",
+                })
+              )
+            ),
+          ]);
+          stream.close();
+          return;
+        }
         await stream.sink([
           Uint8Array.from(
             this.textEncoder.encode(
               JSON.stringify({
+                type: "accept",
                 message: `hello! 欢迎你与我通信，我是${this.chatUser?.value.name}`,
                 user: {
                   userId: this.chatUser?.value.userId,
@@ -868,9 +885,11 @@ export class Libp2pManager {
   };
 
   requestFriend = async (
-    remotePeer: PeerId | Multiaddr,
+    remotePeerUserId: string,
     validationMessage: string
-  ): Promise<Stream> => {
+  ): Promise<boolean> => {
+    const remotePeerIdString = getPeerIdFromUserId(remotePeerUserId);
+    const remotePeerId = peerIdFromString(remotePeerIdString);
     return new Promise(async (resolve, _) => {
       const timeInterval = ref<NodeJS.Timeout>();
       const timeIntervalStart = async (remotePeer: PeerId | Multiaddr) => {
@@ -885,6 +904,7 @@ export class Libp2pManager {
               new TextEncoder().encode(
                 JSON.stringify({
                   message: validationMessage,
+                  connectFromUserId: remotePeerUserId,
                   user: {
                     userId: this.chatUser?.value.userId,
                     peerId: this.chatUser?.value.id,
@@ -909,6 +929,16 @@ export class Libp2pManager {
           const responseObject = JSON.parse(
             responseString
           ) as ProtocolFriendAdd;
+          stream.close();
+          if (responseObject.type == "reject") {
+            ElMessage({
+              type: "warning",
+              message: responseObject.message,
+            });
+            clearInterval(timeInterval.value);
+            ElMessageBox.close();
+            resolve(false);
+          }
           const [messages, messageMe, messageYou] = await Promise.all([
             ChatMessageAggregation.create(
               this.chatUser?.value.id!,
@@ -941,9 +971,8 @@ export class Libp2pManager {
             this.databaseManager?.activatedUserDb.messages.put(messages),
           ]);
           ElMessageBox.close();
-          AlertLoading.value = false;
           clearInterval(timeInterval.value);
-          resolve(stream);
+          resolve(true);
         } catch (error) {
           console.log("addFriend", error);
           timeInterval.value = setTimeout(
@@ -954,7 +983,6 @@ export class Libp2pManager {
       };
 
       const AlertMessage = ref("寻找朋友节点中");
-      const AlertLoading = ref(true);
       ElMessageBox({
         title: "添加好友",
         message: () =>
@@ -962,7 +990,7 @@ export class Libp2pManager {
             ElButton,
             {
               id: "message",
-              loading: AlertLoading.value,
+              loading: true,
               type: "primary",
             },
             () => AlertMessage.value
@@ -979,7 +1007,7 @@ export class Libp2pManager {
         .catch(() => {
           clearInterval(timeInterval.value);
         });
-      timeIntervalStart(remotePeer);
+      timeIntervalStart(remotePeerId);
     });
   };
 

@@ -77,6 +77,8 @@ export default class ChatUser implements ChatUserInfo {
         unique
       );
     } else {
+      // 用户的id==peerId
+      // 此处的id是经过混淆和校验码添加后的UserId
       const { id, peerId } = await generateAndSetIdentifier(peerIdString);
       chatUser = new ChatUser(
         peerId.toString(),
