@@ -211,14 +211,14 @@ export class PeerManager {
         });
         if (!this.communication.value.accepted) {
           console.log("User declined the call.");
+          this.communication.value.await = true;
+          this.communication.value.accepted = false;
         } else {
           this.mediaStream.value = await navigator.mediaDevices.getUserMedia({
             video: this.communication.value.video,
             audio: this.communication.value.audio,
           });
         }
-        this.communication.value.await = true;
-        this.communication.value.accepted = false;
       });
     });
     this.nearPeer.on("call", async (call: MediaConnection) => {
@@ -259,13 +259,8 @@ export class PeerManager {
 
   // 释放媒体流资源
   releaseMediaStream = () => {
-    this.communication.value = {
-      await: true,
-      call: false,
-      accepted: false,
-      video: false,
-      audio: false,
-    };
+    this.communication.value.await = true;
+    this.communication.value.accepted = false;
     if (this.mediaStream.value) {
       const tracks = this.mediaStream.value.getTracks();
       tracks.forEach((track) => track.stop());

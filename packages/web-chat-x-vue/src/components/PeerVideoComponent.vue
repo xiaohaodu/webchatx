@@ -128,7 +128,11 @@ onUnmounted(() => {
 });
 function hungUp() {
   elDialogVisible.value = false;
-  peerManager.mediaConnect?.value?.close();
+  if (peerManager.mediaConnect.value) {
+    peerManager.mediaConnect.value.close();
+  } else {
+    console.log(peerManager.mediaConnect, peerManager.mediaConnect.value);
+  }
 }
 
 function reject() {
