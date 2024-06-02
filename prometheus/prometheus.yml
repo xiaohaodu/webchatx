@@ -1,0 +1,27 @@
+# 全局配置
+global:
+  # 抓取指标的时间间隔
+  scrape_interval: 15s
+  # 评估规则的时间间隔
+  evaluation_interval: 15s
+
+# 告警规则文件列表
+rule_files:
+  - "node_down.yml"
+
+scrape_configs:
+  # # 自监控 Prometheus 指标
+  # - job_name: "prometheus"
+  #   static_configs:
+  #     - targets: ["localhost:9090"]
+
+  # # 抓取 Node Exporter 指标
+  # - job_name: "node-exporter"
+  #   static_configs:
+  #     - targets: ["node-exporter:9100"]
+
+  # js-libp2p 指标（通过 @libp2p/prometheus-metrics 暴露了指标）
+  - job_name: "libp2p"
+    static_configs:
+      - targets: ["web-chat-x-express:8099"] # 实际的 libp2p 节点指标端口
+    metrics_path: /metrics
