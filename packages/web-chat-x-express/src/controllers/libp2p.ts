@@ -170,7 +170,7 @@ export default class Libp2pManager {
       (this.libp2p.services.dht as KadDHT).setMode("server");
       // 获取 Relay 节点的监听地址，并确保找到一个 IPv4 地址
       const listenMultiaddr = this.libp2p.getMultiaddrs();
-      false && this.handleListenEvent();
+      this.handleListenEvent();
       this.handleProtocol();
       console.log("Relay service started on:");
       listenMultiaddr.forEach((addr) => {
