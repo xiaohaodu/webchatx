@@ -12,8 +12,8 @@ app.use(morgan("combined"));
 import client from "prom-client";
 app.get("/metrics", async (_, res) => {
   return res
-    .send(await client.register.metrics())
-    .type(client.register.contentType);
+    .type(client.register.contentType)
+    .send(await client.register.metrics());
 });
 const server = app.listen(port, () => {
   console.log(`webrtc-peer-express app listen on http://localhost:${port}`);
