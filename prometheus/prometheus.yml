@@ -11,9 +11,9 @@ rule_files:
 
 scrape_configs:
   # 自监控 Prometheus 指标
-  - job_name: "prometheus"
-    static_configs:
-      - targets: ["localhost:9090"]
+  # - job_name: "prometheus"
+  #   static_configs:
+  #     - targets: ["localhost:9090"]
 
   # # 抓取 Node Exporter 指标
   # - job_name: "node-exporter"

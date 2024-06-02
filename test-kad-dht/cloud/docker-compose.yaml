@@ -3,6 +3,8 @@ services:
     image: duxiaohao/pm2:v1
     container_name: test-cloud-chat-x-core-full
     network_mode: host
+    # ports:
+    # - 9090:9090
     restart: always
     volumes:
       - ./:/test-cloud-chat-x-core-full
