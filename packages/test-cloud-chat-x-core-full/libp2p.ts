@@ -113,7 +113,7 @@ export default class Libp2pManager {
         peerIdInfo.detail.id.toString() ==
         "12D3KooWGvj79L57Dp8uvLxdZ4PQcEQSoyhh8hgDJBdcHeBW7P11"
       ) {
-        console.log("peer:discovery", peerIdInfo.detail.multiaddrs);
+        console.log("peer:discovery", peerIdInfo.detail);
       }
     });
 

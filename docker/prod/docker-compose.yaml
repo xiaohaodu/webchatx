@@ -4,6 +4,10 @@ services:
     networks:
       - web-chat-x
       - docker
+    ports:
+      - 8099:8099
+      - 9000:9000
+      - 10000:10000
     container_name: web-chat-x-express
     hostname: web-chat-x-express
     restart: always

@@ -1,0 +1,10 @@
+services:
+  test-cloud-chat-x-core-full:
+    image: duxiaohao/pm2:v1
+    container_name: test-cloud-chat-x-core-full
+    network_mode: host
+    restart: always
+    volumes:
+      - ./:/test-cloud-chat-x-core-full
+    working_dir: /test-cloud-chat-x-core-full
+    entrypoint: pm2-runtime start ecosystem.config.cjs
