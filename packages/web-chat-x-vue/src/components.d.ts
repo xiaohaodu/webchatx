@@ -7,7 +7,6 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
-    ChatComponent: typeof import('./components/ChatComponent.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCard: typeof import('element-plus/es')['ElCard']
@@ -52,6 +51,5 @@ declare module 'vue' {
     TestDexieComponent: typeof import('./components/TestComponents/TestDexieComponent.vue')['default']
     TestEmojiComponent: typeof import('./components/TestComponents/TestEmojiComponent.vue')['default']
     TestPeerVideoComponent: typeof import('./components/TestComponents/TestPeerVideoComponent.vue')['default']
-    VideoAudioComponent: typeof import('./components/VideoAudioComponent.vue')['default']
   }
 }

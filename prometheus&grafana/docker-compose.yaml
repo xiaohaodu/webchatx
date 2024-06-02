@@ -1,6 +1,7 @@
 networks:
   monitor:
     driver: bridge
+    name: monitor
   docker:
     external:
       name: docker
