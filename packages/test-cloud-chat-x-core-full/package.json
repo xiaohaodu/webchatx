@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon ./index",
     "build": "tsc && ncc build ./dist/index.js -o build && pnpm copy",
-    "copy": "copyfiles ecosystem.config.cjs build",
+    "copy": "copyfiles ecosystem.config.cjs build && copyfiles docker-compose.yaml build",
     "tsc": "tsc"
   },
   "dependencies": {

@@ -9,13 +9,19 @@ app.use(cors());
 app.use(express.json({ limit: 10 * 1024 * 1024 }));
 app.use(express.urlencoded({ extended: true, limit: 10 * 1024 * 1024 }));
 app.use(morgan("combined"));
+import client from "prom-client";
+app.get("/libp2p_metrics", async (_, res) => {
+  return res
+    .send(await client.register.metrics())
+    .type(client.register.contentType);
+});
 const server = app.listen(port, () => {
   console.log(`webrtc-peer-express app listen on http://localhost:${port}`);
 });
-
 import Libp2pManager from "./controllers/libp2p.js";
 const libp2pManager = new Libp2pManager();
 libp2pManager.startRelayService();
+libp2pManager.libp2p.metrics;
 
 // 直接在构造函数中初始化 Peer 服务器
 const peerServerWrapper = new PeerServerWrapper(server);
