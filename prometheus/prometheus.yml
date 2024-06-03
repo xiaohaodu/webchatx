@@ -1,9 +1,9 @@
 # 全局配置
 global:
   # 抓取指标的时间间隔
-  scrape_interval: 15s
+  scrape_interval: 30s
   # 评估规则的时间间隔
-  evaluation_interval: 15s
+  evaluation_interval: 30s
 
 # 告警规则文件列表
 rule_files:
