@@ -54,8 +54,10 @@
       >
         您的浏览器不支持视频标签。
       </video>
-
       <template #footer>
+        <div v-show="!communication.call && communication.await">
+          {{ communication.video ? "视频请求" : "音频请求" }}
+        </div>
         <div class="flex items-center justify-center">
           <el-button
             v-show="!communication.call && communication.await"
