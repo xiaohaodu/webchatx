@@ -97,6 +97,15 @@ peerManager.createPeer({
 const elDialogVisible = ref(true);
 const remoteVideoElement = ref() as Ref<HTMLVideoElement>;
 const nearVideoElement = ref() as Ref<HTMLVideoElement>;
+const route = useRoute();
+const friendId = computed(() => {
+  return route.params.user_id as string;
+});
+const friend = computed(() => {
+  return libp2pManager.getFriend(friendId.value)!;
+});
+peerManager.remotePeerId = friendId;
+peerManager.remoteUser = friend;
 const communication = ref({
   answer: "",
   caller: "",
@@ -110,22 +119,13 @@ const caller = computed(() => {
   return (
     (communication.value.caller &&
       libp2pManager.getFriend(communication.value.caller)) ||
-    undefined
+    friend.value
   );
 });
 peerManager.remoteVideoElement = remoteVideoElement;
 peerManager.nearVideoElement = nearVideoElement;
 peerManager.elDialogVisible = elDialogVisible;
 peerManager.communication = communication;
-const route = useRoute();
-const friendId = computed(() => {
-  return route.params.user_id as string;
-});
-const friend = computed(() => {
-  return libp2pManager.getFriend(friendId.value)!;
-});
-peerManager.remotePeerId = friendId;
-peerManager.remoteUser = friend;
 onMounted(() => {
   elDialogVisible.value = false;
   nextTick(() => {
