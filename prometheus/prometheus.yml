@@ -25,3 +25,7 @@ scrape_configs:
     static_configs:
       - targets: ["web-chat-x-express:8099"] # 实际的 libp2p 节点指标端口
     metrics_path: /metrics
+
+  - job_name: "webRTC"
+    static_configs:
+      - targets: ["localhost:9101"]

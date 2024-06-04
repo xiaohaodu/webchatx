@@ -25,6 +25,18 @@ services:
     networks:
       # - monitor
       - docker
+  pushgateway:
+    image: prom/pushgateway:v1.4.2
+    container_name: pushgateway
+    hostname: pushgateway
+    restart: always
+    ports:
+      - "9101:9091" # 映射宿主机端口到容器端口
+    networks:
+      - docker
+    # 如果需要持久化数据，可以添加持久化卷
+    volumes:
+      - ./pushgateway_data:/pushgateway
 
   # grafana:
   #   image: grafana/grafana:11.0.0
