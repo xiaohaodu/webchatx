@@ -233,11 +233,13 @@ export class DatabaseManager {
   exportCurrentUserDB = async () => {
     try {
       const blobs = [] as Array<Blob>;
-      const activatedUserDb = await exportDB(this.activatedUserDb);
+      const currentUser = await this.getCurrentUserInfo();
+      const activatedUserDb = await this.exportDatabase(
+        "webChatX@" + currentUser.id
+      );
       // const publicDb = await exportDB(this.publicDb);
       // blobs.push(activatedUserDb, publicDb);
       blobs.push(activatedUserDb);
-      const currentUser = await this.getCurrentUserInfo();
       const combinedBlob = await this.combineMultipleBlobs(blobs);
       const file = new File(
         [combinedBlob],
