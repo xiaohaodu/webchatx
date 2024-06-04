@@ -28,4 +28,4 @@ scrape_configs:
 
   - job_name: "webRTC"
     static_configs:
-      - targets: ["localhost:9101"]
+      - targets: ["pushgateway:9091"]
