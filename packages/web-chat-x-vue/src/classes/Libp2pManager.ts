@@ -931,7 +931,7 @@ export class Libp2pManager {
             });
             clearInterval(timeInterval.value);
             ElMessageBox.close();
-            resolve(false);
+            return resolve(false);
           }
           const [messages, messageMe, messageYou] = await Promise.all([
             ChatMessageAggregation.create(
