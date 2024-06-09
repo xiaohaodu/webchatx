@@ -76,7 +76,7 @@ export class Libp2pManager {
           },
         }),
         circuitRelayTransport({
-          discoverRelays: 1,
+          discoverRelays: 50,
         }),
       ],
       connectionEncryption: [noise()],
@@ -498,9 +498,11 @@ export class Libp2pManager {
         for (const subscriber of subscribers) {
           promiseAllArray.push(fallbackCall(channel, subscriber));
         }
-        (this.libp2p!.services.pubsub as PubSub<GossipsubEvents>).subscribe(
-          `${channel.name}@${channel.id}`
-        );
+        if (!subscriberIds.includes(this.chatUser?.value.id!)) {
+          (this.libp2p!.services.pubsub as PubSub<GossipsubEvents>).subscribe(
+            `${channel.name}@${channel.id}`
+          );
+        }
       }
     }
     Promise.all(promiseAllArray).then(() => {

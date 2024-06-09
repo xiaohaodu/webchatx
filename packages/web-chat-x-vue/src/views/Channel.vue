@@ -50,12 +50,9 @@
           <p
             class="text-left text-gray-600"
           >
-            {{message.postUserId===currentUser.id? currentUser.name:libp2pManager.getSubscriber(message.postUserId)!.name }}
+            {{libp2pManager.getSubscriber(message.postUserId)!.name }}
             <div
-            :class="[
-              'flex flex-col self-end',
-              message.postUserId===currentUser.id ? 'text-right' : 'text-left',
-            ]"
+            class="flex flex-col self-end text-left"
           >
           <span class="text-gray-600" v-if="message.text">
               {{ message.text }}

@@ -2,7 +2,10 @@
 import { Libp2p, createLibp2p } from "libp2p";
 import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
-import { circuitRelayServer } from "@libp2p/circuit-relay-v2";
+import {
+  circuitRelayServer,
+  circuitRelayTransport,
+} from "@libp2p/circuit-relay-v2";
 import { webSockets } from "@libp2p/websockets";
 import * as filters from "@libp2p/websockets/filters";
 import { identify } from "@libp2p/identify";
@@ -47,6 +50,11 @@ export default class Libp2pManager {
       transports: [
         webSockets({
           filter: filters.all,
+        }),
+        circuitRelayTransport({
+          //允许当前节点建立和接受中继连接
+          discoverRelays: 0, // 要找到多少个网络中继
+          reservationConcurrency: 1, // 一次要尝试保留多少个继电器的插槽
         }),
       ],
       connectionEncryption: [noise(), tls()],
