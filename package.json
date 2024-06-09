@@ -64,8 +64,7 @@
     "libp2p-delegated-peer-routing": "^0.11.1",
     "lodash-es": "^4.17.21",
     "prom-client": "^15.1.2",
-    "uint8arrays": "^5.1.0",
-    "wrtc": "^0.4.7"
+    "uint8arrays": "^5.1.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
