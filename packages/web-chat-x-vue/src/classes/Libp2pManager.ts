@@ -21,7 +21,6 @@ import { peerIdFromPeerId, peerIdFromString } from "@libp2p/peer-id";
 import { PeerManager } from "./PeerManager";
 import ChatChannel from "./ChatChannel";
 import { base64ToFile, fileToBase64, getPeerIdFromUserId } from "@/utils";
-import { dcutr } from "@libp2p/dcutr";
 import { bootstrap } from "@libp2p/bootstrap";
 import { Peer } from "@libp2p/interface";
 const topics = [
@@ -105,7 +104,6 @@ export class Libp2pManager {
           floodPublish: true,
           doPX: true,
         }),
-        dcutr: dcutr(),
       },
       peerId,
     });
