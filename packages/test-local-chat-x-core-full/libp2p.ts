@@ -2,7 +2,10 @@
 import { Libp2p, createLibp2p } from "libp2p";
 import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
-import { circuitRelayServer } from "@libp2p/circuit-relay-v2";
+import {
+  circuitRelayServer,
+  circuitRelayTransport,
+} from "@libp2p/circuit-relay-v2";
 import { webSockets } from "@libp2p/websockets";
 import * as filters from "@libp2p/websockets/filters";
 import { identify } from "@libp2p/identify";
@@ -19,6 +22,7 @@ import { tls } from "@libp2p/tls";
 import { prometheusMetrics } from "@libp2p/prometheus-metrics";
 import { bootstrap } from "@libp2p/bootstrap";
 import { parsePrivateKeySecretToPeerId } from "./util.js";
+import { tcp } from "@libp2p/tcp";
 const topics = [
   `webChatX._peer-discovery._p2p._pubsub`, // It's recommended but not required to extend the global space
 ];
@@ -40,12 +44,18 @@ export default class Libp2pManager {
     const peerId = await parsePrivateKeySecretToPeerId();
     return await createLibp2p({
       addresses: {
-        listen: ["/ip4/0.0.0.0/tcp/9080/ws"], // 替换为实际希望监听的 IP 和端口
+        listen: ["/ip4/0.0.0.0/tcp/9080/ws", "/ip4/0.0.0.0/tcp/9400"], // 替换为实际希望监听的 IP 和端口
       },
       transports: [
         webSockets({
           filter: filters.all,
         }),
+        circuitRelayTransport({
+          //允许当前节点建立和接受中继连接
+          discoverRelays: 0, // 要找到多少个网络中继
+          reservationConcurrency: 1, // 一次要尝试保留多少个继电器的插槽
+        }),
+        tcp(),
       ],
       connectionEncryption: [noise(), tls()],
       streamMuxers: [yamux()],
@@ -173,6 +183,7 @@ export default class Libp2pManager {
       // 创建并初始化 Relay 节点
       this.libp2p = await this.createRelayNode();
       (this.libp2p.services.dht as KadDHT).setMode("server");
+      (this.libp2p.services.lanDHT as KadDHT).setMode("server");
       // 获取 Relay 节点的监听地址，并确保找到一个 IPv4 地址
       const listenMultiaddr = this.libp2p.getMultiaddrs();
       // 如果提供了 onStarted 回调，则在服务启动后调用它，传入监听地址

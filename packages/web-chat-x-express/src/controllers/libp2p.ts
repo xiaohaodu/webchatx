@@ -23,6 +23,7 @@ import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
 import { tls } from "@libp2p/tls";
 import { prometheusMetrics } from "@libp2p/prometheus-metrics";
 import { bootstrap } from "@libp2p/bootstrap";
+import { tcp } from "@libp2p/tcp";
 const topics = [
   `webChatX._peer-discovery._p2p._pubsub`, // It's recommended but not required to extend the global space
 ];
@@ -45,7 +46,11 @@ export default class Libp2pManager {
     const peerId = await peerIdFromKeys(keyPair.public.bytes, keyPair.bytes);
     return await createLibp2p({
       addresses: {
-        listen: ["/ip4/0.0.0.0/tcp/9000/wss", "/ip4/0.0.0.0/tcp/10000/ws"], // 替换为实际希望监听的 IP 和端口
+        listen: [
+          "/ip4/0.0.0.0/tcp/9000/wss",
+          "/ip4/0.0.0.0/tcp/10000/ws",
+          "/ip4/0.0.0.0/tcp/9500",
+        ], // 替换为实际希望监听的 IP 和端口
       },
       transports: [
         webSockets({
@@ -56,6 +61,7 @@ export default class Libp2pManager {
           discoverRelays: 0, // 要找到多少个网络中继
           reservationConcurrency: 1, // 一次要尝试保留多少个继电器的插槽
         }),
+        tcp(),
       ],
       connectionEncryption: [noise(), tls()],
       streamMuxers: [yamux()],
@@ -65,6 +71,7 @@ export default class Libp2pManager {
         relay: circuitRelayServer({
           advertise: true,
         }),
+        pubsub: gossipsub(),
         dht: kadDHT({
           kBucketSize: 20,
           clientMode: false,
@@ -78,7 +85,6 @@ export default class Libp2pManager {
           peerInfoMapper: removePublicAddressesMapper,
           clientMode: false,
         }),
-        pubsub: gossipsub(),
       },
       peerDiscovery: [
         mdns(),
@@ -176,6 +182,7 @@ export default class Libp2pManager {
 
       this.libp2p = await this.createRelayNode();
       (this.libp2p.services.dht as KadDHT).setMode("server");
+      (this.libp2p.services.lanDHT as KadDHT).setMode("server");
       // 获取 Relay 节点的监听地址，并确保找到一个 IPv4 地址
       const listenMultiaddr = this.libp2p.getMultiaddrs();
       this.handleListenEvent();
