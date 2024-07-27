@@ -68,7 +68,12 @@
 </template>
 
 <script setup lang="ts">
-import { UploadUserFile } from "element-plus";
+import {
+  ElButton,
+  ElMessage,
+  ElMessageBox,
+  UploadUserFile,
+} from "element-plus";
 import useDexie from "@/hooks/useDexie";
 import { cloneDeep } from "lodash-es";
 import useLibp2p from "@/hooks/useLibp2p";

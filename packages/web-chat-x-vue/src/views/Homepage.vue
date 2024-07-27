@@ -79,6 +79,7 @@
 <script setup lang="ts">
 import useLibp2p from "@/hooks/useLibp2p";
 const { libp2pManager } = useLibp2p();
+import { ElMessage } from "element-plus";
 const user = libp2pManager.getChatUser();
 async function copyID() {
   await navigator.clipboard.writeText(user.value.userId);

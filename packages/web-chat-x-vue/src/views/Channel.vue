@@ -128,7 +128,7 @@
 
 <script lang="ts" setup>
 import { useRoute } from "vue-router";
-import { ElMain  } from "element-plus";
+import { ElMain, ElMessage  } from "element-plus";
 import useLibp2p from "@/hooks/useLibp2p";
 import EmojiComponent from "@/components/EmojiComponent.vue";
 import fileIcon from '@/assets/file.svg'
