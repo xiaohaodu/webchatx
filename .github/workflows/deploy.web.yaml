@@ -31,6 +31,6 @@ jobs:
           SSH_PRIVATE_KEY: ${{ vars.SSH_KEY }}
           ARGS: "-rltgoDzvO --delete"
           SOURCE: "packages/web-chat-x-vue/dist/"
-          REMOTE_HOST: "182.92.222.231"
+          REMOTE_HOST: "62.234.163.223"
           REMOTE_USER: root
           TARGET: "/home/web-chat-x/web-chat-x-vue"
