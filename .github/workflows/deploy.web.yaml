@@ -25,12 +25,21 @@ jobs:
         run: pnpm install
       - name: Build
         run: pnpm build:f
-      - name: Deploy to Server
+      - name: Deploy to tencent cloud server
         uses: easingthemes/ssh-deploy@v4.1.8
         env:
           SSH_PRIVATE_KEY: ${{ vars.SSH_KEY }}
           ARGS: "-rltgoDzvO --delete"
           SOURCE: "packages/web-chat-x-vue/dist/"
           REMOTE_HOST: "62.234.163.223"
+          REMOTE_USER: root
+          TARGET: "/home/web-chat-x/web-chat-x-vue"
+      - name: Deploy to aliyun cloud server
+        uses: easingthemes/ssh-deploy@v4.1.8
+        env:
+          SSH_PRIVATE_KEY: ${{ vars.SSH_KEY }}
+          ARGS: "-rltgoDzvO --delete"
+          SOURCE: "packages/web-chat-x-vue/dist/"
+          REMOTE_HOST: "182.92.222.231"
           REMOTE_USER: root
           TARGET: "/home/web-chat-x/web-chat-x-vue"
