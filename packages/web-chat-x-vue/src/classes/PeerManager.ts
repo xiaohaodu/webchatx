@@ -1,4 +1,3 @@
-import { ElMessage } from "element-plus";
 import Peer, { DataConnection, MediaConnection } from "peerjs";
 type PeerManagerOption = {
   nearPeerId: string;

@@ -128,11 +128,11 @@
 
 <script lang="ts" setup>
 import { useRoute } from "vue-router";
-import { ElMain, ElMessage, ElUpload, UploadProps, UploadUserFile } from "element-plus";
 import useLibp2p from "@/hooks/useLibp2p";
 import EmojiComponent from "@/components/EmojiComponent.vue";
 import fileIcon from '@/assets/file.svg'
 import usePeer from "@/hooks/usePeer";
+import { ElMain, ElUpload, UploadProps, UploadUserFile } from "element-plus";
 const {libp2pManager}=useLibp2p()
 const refMain=ref() as Ref<InstanceType<typeof ElMain>>;
 const route=useRoute()

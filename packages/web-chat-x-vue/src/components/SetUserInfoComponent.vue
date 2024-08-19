@@ -68,15 +68,10 @@
 </template>
 
 <script setup lang="ts">
-import {
-  ElButton,
-  ElMessage,
-  ElMessageBox,
-  UploadUserFile,
-} from "element-plus";
 import useDexie from "@/hooks/useDexie";
 import { cloneDeep } from "lodash-es";
 import useLibp2p from "@/hooks/useLibp2p";
+import { UploadUserFile } from "element-plus";
 const { libp2pManager } = useLibp2p();
 const { databaseManager } = useDexie();
 const user = ref(

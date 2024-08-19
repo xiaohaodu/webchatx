@@ -23,12 +23,6 @@ import ChatChannel from "./ChatChannel";
 import { base64ToFile, fileToBase64, getPeerIdFromUserId } from "@/utils";
 import { bootstrap } from "@libp2p/bootstrap";
 import { Peer } from "@libp2p/interface";
-import {
-  ElButton,
-  ElMessage,
-  ElMessageBox,
-  ElNotification,
-} from "element-plus";
 const topics = [
   `webChatX._peer-discovery._p2p._pubsub`, // It's recommended but not required to extend the global space
 ];
